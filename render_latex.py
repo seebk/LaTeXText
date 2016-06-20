@@ -262,9 +262,14 @@ class Latex2SvgRenderer:
             f_tex.close()
 
         # Exec pdflatex: tex -> pdf
+        if PLATFORM == MAC:
+            LATEX_PATH = '/Library/TeX/texbin'
+        else:
+            LATEX_PATH = ''
+            
         cmdlog = ""
         try:
-            cmd = ['pdflatex', texfile_path] + latexOpts
+            cmd = [os.path.join(LATEX_PATH, 'pdflatex'), texfile_path] + latexOpts
             cmdlog = self.__exec_command(cmd)
         except RuntimeError as error:
             # TODO: cleanup excpetion handling and excception chains
