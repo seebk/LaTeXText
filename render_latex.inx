@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
+	<name>Render Latex Layer</name>
+	<id>org.inkscape.render.latex_layer</id>
+	<dependency type="executable" location="extensions">render_latex.py</dependency>
+    <dependency type="executable" location="extensions">inkex.py</dependency>
+	<param name="preamble" type="string" gui-text="Preamble"></param>
+	<param name="scale" type="float" precision="2" min="0.1" max="100" gui-text="Scale">1.0</param>
+	<param name="debug" type="boolean" gui-text="Show debug log">false</param>
+	<effect>
+		<object-type>all</object-type>
+		<effects-menu>
+			<submenu _name="Render"/>
+		</effects-menu>
+	</effect>
+	<script>
+		<command reldir="extensions" interpreter="python">render_latex.py</command>
+	</script>
+</inkscape-extension>
