@@ -164,7 +164,7 @@ class SvgParser:
                 txt_empty = True
                 for ts in tspans:
                     if ts.text:
-                        latex_string += ts.text + '\\\\\n'
+                        latex_string += ts.text + '\n'
                         txt_empty = False
                     else:
                         latex_string += '\n'
