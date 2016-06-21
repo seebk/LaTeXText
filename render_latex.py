@@ -239,20 +239,20 @@ class Latex2SvgRenderer:
         latexOpts = ['-interaction=nonstopmode',
                      '-halt-on-error']
 
-        texwrapper = r"""
-        \documentclass{article}
-        \usepackage[a0paper]{geometry}
-        \newlength\tindent
-        \setlength{\tindent}{\parindent}
-        \setlength{\parindent}{0pt}
-        \renewcommand{\indent}{\hspace*{\tindent}}
-        %s
-        \pagestyle{empty}
-        \AtBeginDocument{\pdfliteral { %s 0 0 %s 0 0 cm }}
-        \begin{document}
-            %s
-        \end{document}
-        """ % (self.preamble, scale, scale, latex_code)
+        texwrapper = \
+r"""\documentclass{article}
+\usepackage[a0paper]{geometry}
+\newlength\tindent
+\setlength{\tindent}{\parindent}
+\setlength{\parindent}{0pt}
+\renewcommand{\indent}{\hspace*{\tindent}}
+%s
+\pagestyle{empty}
+\AtBeginDocument{\pdfliteral { %s 0 0 %s 0 0 cm }}
+\begin{document}
+    %s
+\end{document}""" \
+        % (self.preamble, scale, scale, latex_code)
 
         # Convert TeX to PDF
 
