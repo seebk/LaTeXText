@@ -160,11 +160,17 @@ class SvgParser:
                 # logln("Pos: ", pos)
 
                 latex_string = ""
-                for txt_line in txt.findall('{%s}tspan' % SVG_NS):
-                    if txt_line.text:
-                        latex_string += txt_line.text + '\\\\\n'
+                tspans = txt.findall('{%s}tspan' % SVG_NS)
+                txt_empty = True
+                for ts in tspans:
+                    if ts.text:
+                        latex_string += ts.text + '\\\\\n'
+                        txt_empty = False
                     else:
                         latex_string += '\n'
+                if txt_empty:
+                    logln("Empty text element, skipping...")
+                    continue
                 logln(latex_string)
                 rendergroup = lat2svg.render(latex_string, self.options.scale)
                 rendergroup = self.align_placement(rendergroup, txt)
