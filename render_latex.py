@@ -125,9 +125,10 @@ class SvgParser:
             if 'y' in el.attrib:
                 el.attrib['y'] = str(float(el.attrib['y']) - pos_offset[1] + new_pos[1])
 
-        if 'transform' in txt.attrib:
-            node.attrib['transform'] = txt.attrib['transform']
-            # TODO: merge with existing transform attribute
+        for el in txt.iterancestors():
+            if 'transform' in el.attrib:
+                node.attrib['transform'] = el.attrib['transform']
+                # TODO: merge all  transform attributes and manually applied transforms
 
         return node
 
@@ -154,34 +155,31 @@ class SvgParser:
             elif preamble_path:
                 lat2svg.load_preamble(preamble_path)
 
-        for layer in self.docroot.findall('{%s}g' % SVG_NS):
-            for txt in layer.findall('{%s}text' % SVG_NS):
-                logln("ID: " + txt.attrib['id'])
-                # logln("Pos: ", pos)
+        for txt in self.docroot.findall('.//{%s}text' % SVG_NS):
+            logln("ID: " + txt.attrib['id'])
+            # logln("Pos: ", pos)
 
-                latex_string = ""
-                tspans = txt.findall('{%s}tspan' % SVG_NS)
-                txt_empty = True
-                for ts in tspans:
-                    if ts.text:
-                        latex_string += ts.text + '\n'
-                        txt_empty = False
-                    else:
-                        latex_string += '\n'
-                if txt_empty:
-                    logln("Empty text element, skipping...")
-                    continue
-                logln(latex_string)
-                rendergroup = lat2svg.render(latex_string, self.options.scale)
-                rendergroup = self.align_placement(rendergroup, txt)
-                rendergroup = self.apply_style(rendergroup, txt)
-                self.add_id_prefix(rendergroup, 'lx-' + txt.attrib['id'])
-                self.insert_node(rendergroup, render_layer)
-
-                parent_layer = txt.getparent()
-                if 'transform' in parent_layer.attrib:
-                    render_layer.attrib['transform'] = parent_layer.attrib['transform']
-                    # TODO: merge with existing transform attribute
+            latex_string = ""
+            txt_empty = True
+            if txt.text:
+                latex_string += txt.text + '\n'
+                txt_empty = False
+            tspans = txt.findall('{%s}tspan' % SVG_NS)
+            for ts in tspans:
+                if ts.text:
+                    latex_string += ts.text + '\n'
+                    txt_empty = False
+                else:
+                    latex_string += '\n'
+            if txt_empty:
+                logln("Empty text element, skipping...")
+                continue
+            logln(latex_string)
+            rendergroup = lat2svg.render(latex_string, self.options.scale)
+            rendergroup = self.align_placement(rendergroup, txt)
+            rendergroup = self.apply_style(rendergroup, txt)
+            self.add_id_prefix(rendergroup, 'lx-' + txt.attrib['id'])
+            self.insert_node(rendergroup, render_layer)
 
         return self.docroot
 
