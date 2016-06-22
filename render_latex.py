@@ -108,7 +108,11 @@ class SvgParser:
         return node
 
     def align_placement(self, node, txt):
-        new_pos = (float(txt.attrib['x']), float(txt.attrib['y']))
+        if 'x' in txt.attrib and 'y' in txt.attrib:
+            new_pos = (float(txt.attrib['x']), float(txt.attrib['y']))
+        else:
+            new_pos = (0, 0)
+
         # remove position offset, anchor is top/right most element
         pos_list = list()
         for el in node.getiterator():
@@ -156,8 +160,10 @@ class SvgParser:
                 lat2svg.load_preamble(preamble_path)
 
         for txt in self.docroot.findall('.//{%s}text' % SVG_NS):
+            if self.options.depth > 0  and txt.xpath('count(ancestor::*)') > self.options.depth + 1:
+                    continue
+
             logln("ID: " + txt.attrib['id'])
-            # logln("Pos: ", pos)
 
             latex_string = ""
             txt_empty = True
@@ -270,7 +276,7 @@ r"""\documentclass{article}
             LATEX_PATH = '/Library/TeX/texbin'
         else:
             LATEX_PATH = ''
-            
+
         cmdlog = ""
         try:
             cmd = [os.path.join(LATEX_PATH, 'pdflatex'), texfile_path] + latexOpts
@@ -307,10 +313,12 @@ def add_options(parser):
                       help="write to output file", metavar="FILE")
     parser.add_option("-p", "--preamble", dest="preamble", default="",
                       help="latex preamble file", metavar="FILE")
-    parser.add_option("-s", "--scale", dest="scale", default="1",
+    parser.add_option("-s", "--scale", dest="scale", default=1,
                       help="apply additional scaling")
+    parser.add_option("-d", "--depth", dest="depth", default=0, type="int",
+                      help="maximum search depth for grouped text elements")
     parser.add_option("-c", "--clean",
-                      action="store_false", dest="cleane", default=False,
+                      action="store_false", dest="clean", default=False,
                       help="remove all renderings")
 
 if STANDALONE is False:
@@ -320,7 +328,7 @@ if STANDALONE is False:
         def __init__(self):
             inkex.Effect.__init__(self)
             add_options(self.OptionParser)
-            self.OptionParser.add_option("-d", "--debug", type='inkbool',
+            self.OptionParser.add_option("-l", "--log", type='inkbool',
                       action="store", dest="debug", default=False,
                       help="show log messages in inkscape")
 
