@@ -52,6 +52,32 @@ except ImportError:
 
 
 ######################
+# SVG transformer
+#    Parse, modify and create SVG transform attributes
+class SvgTransformer:
+
+    def __init__(self, attrStr=""):
+        self.x = 0
+        self.y = 0
+        if attrStr:
+            self.parseString(attrStr)
+
+    def apply(self, attrStr):
+        coordList = self.parseString(attrStr)
+        self.x += coordList[0]
+        self.y += coordList[1]
+
+    def toString(self):
+        return "translate(%f,%f)" % (self.x, self.y)
+
+    def parseString(self, attrStr):
+        if "translate" in attrStr:
+            coordStr = attrStr[10:-1]
+            coordList = list([float(coord) for coord in coordStr.split(",") if coord])
+            return coordList
+
+
+######################
 # SVG parser
 #    Retrieve all text elements, render them with Latex and add the result in
 #    a new layer
@@ -129,10 +155,16 @@ class SvgParser:
             if 'y' in el.attrib:
                 el.attrib['y'] = str(float(el.attrib['y']) - pos_offset[1] + new_pos[1])
 
+        transform = SvgTransformer()
+        if 'transform' in txt.attrib:
+            transform.apply(txt.attrib['transform'])
+
         for el in txt.iterancestors():
             if 'transform' in el.attrib:
-                node.attrib['transform'] = el.attrib['transform']
-                # TODO: merge all  transform attributes and manually applied transforms
+                transform.apply(txt.attrib['transform'])
+
+        logln(transform.toString())
+        node.attrib['transform'] = transform.toString()
 
         return node
 
