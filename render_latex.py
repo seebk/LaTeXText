@@ -56,25 +56,61 @@ except ImportError:
 #    Parse, modify and create SVG transform attributes
 class SvgTransformer:
 
+    def __init_matrix(self):
+        matrix = [[0]*3 for i in range(3)]
+        matrix[0][0] = 1
+        matrix[1][1] = 1
+        matrix[2][2] = 1
+        return matrix
+
     def __init__(self, attrStr=""):
-        self.x = 0
-        self.y = 0
+        self.matrix = self.__init_matrix()
+        self.transform_type = ""
         if attrStr:
             self.parseString(attrStr)
 
+    def __matmult(self, a, b):
+        zip_b = zip(*b)
+        # uncomment next line if python 3 :
+        # zip_b = list(zip_b)
+        return [[sum(ele_a*ele_b for ele_a, ele_b in zip(row_a, col_b))
+                 for col_b in zip_b] for row_a in a]
+
     def apply(self, attrStr):
-        coordList = self.parseString(attrStr)
-        self.x += coordList[0]
-        self.y += coordList[1]
+        coordList, transform_type = self.parseString(attrStr)
+        if transform_type == "translate":
+            new_matrix = self.__init_matrix()
+            new_matrix[0][2] = coordList[0]
+            new_matrix[1][2] = coordList[1]
+            self.matrix = self.__matmult(new_matrix, self.matrix)
+        elif transform_type == "matrix":
+            logln(coordList)
+            new_matrix = self.__init_matrix()
+            logln(new_matrix)
+            new_matrix[0][0] = coordList[0]
+            new_matrix[1][0] = coordList[1]
+            new_matrix[0][1] = coordList[2]
+            new_matrix[1][1] = coordList[3]
+            new_matrix[0][2] = coordList[4]
+            new_matrix[1][2] = coordList[5]
+            self.matrix = self.__matmult(new_matrix, self.matrix)
 
     def toString(self):
-        return "translate(%f,%f)" % (self.x, self.y)
+        #return "translate(%f,%f)" % (self.x, self.y)
+        #return ""
+        return "matrix(%f,%f,%f,%f,%f,%f)" % (self.matrix[0][0], self.matrix[1][0], self.matrix[0][1], self.matrix[1][1], self.matrix[0][2], self.matrix[1][2])
 
     def parseString(self, attrStr):
         if "translate" in attrStr:
             coordStr = attrStr[10:-1]
             coordList = list([float(coord) for coord in coordStr.split(",") if coord])
-            return coordList
+            return coordList, "translate"
+        elif "matrix" in attrStr:
+            coordStr = attrStr[7:-1]
+            coordList = list([float(coord) for coord in coordStr.split(",") if coord])
+            return coordList, "matrix"
+        else:
+            return None, None
 
 
 ######################
@@ -161,7 +197,7 @@ class SvgParser:
 
         for el in txt.iterancestors():
             if 'transform' in el.attrib:
-                transform.apply(txt.attrib['transform'])
+                transform.apply(el.attrib['transform'])
 
         logln(transform.toString())
         node.attrib['transform'] = transform.toString()
