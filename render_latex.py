@@ -117,6 +117,18 @@ class SvgTransformer:
             new_matrix[1][2] = coordList[5]
             self.matrix = self.__matmult(new_matrix, self.matrix)
 
+    def scale(self, factor):
+        new_matrix = self.__init_matrix()
+        new_matrix[0][0] = factor
+        new_matrix[1][1] = factor
+        self.matrix = self.__matmult(new_matrix, self.matrix)
+
+    def translate(self, x, y):
+        new_matrix = self.__init_matrix()
+        new_matrix[0][2] = x
+        new_matrix[1][2] = y
+        self.matrix = self.__matmult(new_matrix, self.matrix)
+
     def toString(self):
         return "matrix(%f,%f,%f,%f,%f,%f)" % (self.matrix[0][0], self.matrix[1][0], self.matrix[0][1], self.matrix[1][1], self.matrix[0][2], self.matrix[1][2])
 
@@ -212,6 +224,13 @@ class SvgParser:
                 el.attrib['y'] = str(float(el.attrib['y']) - pos_offset[1] + new_pos[1])
 
         transform = SvgTransformer()
+
+        # unit conversion between Latex output and SVG file
+        # factor 1.25 was determined empirically for pdflatex -> inkscape
+        # TODO: apply generic unit conversion
+        transform.scale(1.25)
+        transform.translate(-0.25 * new_pos[0], -0.25 * new_pos[1])
+
         if 'transform' in txt.attrib:
             transform.apply(txt.attrib['transform'])
 
@@ -241,7 +260,7 @@ class SvgParser:
             render_layer.attrib['{%s}preamble' % RENDLTX_NS] = self.options.preamble
         else:
             log_debug("Using a previous render layer...")
-            preamble_path = render_layer.attrib['{%s}preamble' % RENDLTX_NS]
+            preamble_path = render_layer.attrib.get('{%s}preamble' % RENDLTX_NS, None)
             if self.options.preamble is not None:
                 lat2svg.load_preamble(self.options.preamble)
             elif preamble_path:
@@ -251,7 +270,7 @@ class SvgParser:
             if self.options.depth > 0 and txt.xpath('count(ancestor::*)') > self.options.depth + 1:
                     continue
 
-            log_debug("ID: " + txt.attrib['id'])
+            log_debug("ID: " + txt.attrib.get('id', None))
 
             latex_string = ""
             txt_empty = True
@@ -271,7 +290,7 @@ class SvgParser:
             if self.options.math and latex_string[0] is not '$':
                 latex_string = '$' + latex_string + '$'
             log_debug(latex_string)
-            rendergroup = lat2svg.render(latex_string, self.options.scale)
+            rendergroup = lat2svg.render(latex_string, self.options.fontsize, self.options.scale)
             rendergroup = self.align_placement(rendergroup, txt)
             rendergroup = self.apply_style(rendergroup, txt)
             self.add_id_prefix(rendergroup, 'lx-' + txt.attrib['id'])
@@ -324,7 +343,7 @@ class Latex2SvgRenderer:
             with open(filename, 'r') as preamble_file:
                 self.preamble = preamble_file.read()
 
-    def render(self, latex_code, scale=1):
+    def render(self, latex_code, fontsize=10, scale=1):
         """
         Create a SVG file from latex code
         """
@@ -333,8 +352,13 @@ class Latex2SvgRenderer:
         latexOpts = ['-interaction=nonstopmode',
                      '-halt-on-error']
 
+        if fontsize in [10, 11, 12]:
+            doc_class = "article"
+        else:
+            doc_class = "scrartcl"
+
         texwrapper = \
-r"""\documentclass{article}
+r"""\documentclass[%dpt]{%s}
 \usepackage[a0paper]{geometry}
 \newlength\tindent
 \setlength{\tindent}{\parindent}
@@ -346,7 +370,7 @@ r"""\documentclass{article}
 \begin{document}
     %s
 \end{document}""" \
-        % (self.preamble, scale, scale, latex_code)
+        % (fontsize, doc_class, self.preamble, scale, scale, latex_code)
 
         # Convert TeX to PDF
 
@@ -403,7 +427,9 @@ def add_options(parser):
                       help="write to output file", metavar="FILE")
     parser.add_option("-p", "--preamble", dest="preamble", default="",
                       help="latex preamble file", metavar="FILE")
-    parser.add_option("-s", "--scale", dest="scale", default=1,
+    parser.add_option("-f", "--fontsize", dest="fontsize", default=10, type="int",
+                      help="latex base font size")
+    parser.add_option("-s", "--scale", dest="scale", default=1, type="float",
                       help="apply additional scaling")
     parser.add_option("-d", "--depth", dest="depth", default=0, type="int",
                       help="maximum search depth for grouped text elements")
