@@ -247,6 +247,8 @@ class SvgParser:
             if txt_empty:
                 logln("Empty text element, skipping...")
                 continue
+            if self.options.math and latex_string[0] is not '$':
+                latex_string = '$' + latex_string + '$'
             logln(latex_string)
             rendergroup = lat2svg.render(latex_string, self.options.scale)
             rendergroup = self.align_placement(rendergroup, txt)
@@ -384,6 +386,8 @@ def add_options(parser):
                       help="apply additional scaling")
     parser.add_option("-d", "--depth", dest="depth", default=0, type="int",
                       help="maximum search depth for grouped text elements")
+    parser.add_option("-m", "--math", dest="math", default=False,
+                      help="encapsulate all text in math mode")
     parser.add_option("-c", "--clean",
                       action="store_false", dest="clean", default=False,
                       help="remove all renderings")
