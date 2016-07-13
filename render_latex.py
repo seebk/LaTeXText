@@ -15,6 +15,8 @@ PLATFORM = platform.system()
 
 INKEX_DEBUG = False
 STANDALONE = False
+VERBOSE = False
+
 
 ######################
 # XML namespace definitions
@@ -31,12 +33,32 @@ NSS = {
     u'rendltx': RENDLTX_NS,
 }
 
+######################
+# logging functions
 
-def logln(*msg):
-    global QUIET
+log_level_debug = 1
+log_level_info = 2
+log_level_error = 3
+
+
+def log_info(*msg):
+    log_write(log_level_info, *msg)
+
+
+def log_debug(*msg):
+    log_write(log_level_debug, *msg)
+
+
+def log_error(*msg):
+    log_write(log_level_error, *msg)
+
+
+def log_write(log_level, *msg):
+    global VERBOSE
     global STANDALONE
-    if STANDALONE is True:
-        print(*msg)
+    if STANDALONE:
+        if VERBOSE or log_level == log_level_error or log_level == log_level_info:
+            print(*msg)
     elif INKEX_DEBUG is True:
         for m in msg:
             inkex.debug(m)
@@ -47,7 +69,6 @@ try:
     import inkex
     inkex.localize()
     STANDALONE = False
-    QUIET = True
 except ImportError:
     STANDALONE = True
 
@@ -85,9 +106,9 @@ class SvgTransformer:
             new_matrix[1][2] = coordList[1]
             self.matrix = self.__matmult(new_matrix, self.matrix)
         elif transform_type == "matrix":
-            logln(coordList)
+            log_debug(coordList)
             new_matrix = self.__init_matrix()
-            logln(new_matrix)
+            log_debug(new_matrix)
             new_matrix[0][0] = coordList[0]
             new_matrix[1][0] = coordList[1]
             new_matrix[0][1] = coordList[2]
@@ -198,7 +219,7 @@ class SvgParser:
             if 'transform' in el.attrib:
                 transform.apply(el.attrib['transform'])
 
-        logln(transform.toString())
+        log_debug(transform.toString())
         node.attrib['transform'] = transform.toString()
 
         return node
@@ -210,7 +231,7 @@ class SvgParser:
         # check for render layer or add new one
         render_layer = self.docroot.find("{%s}g[@id='ltx-render-layer']" % SVG_NS)
         if render_layer is None:
-            logln("Creating a new render layer...")
+            log_debug("Creating a new render layer...")
             render_layer = etree.Element('g')
             render_layer.attrib['{%s}label' % INKSCAPE_NS] = 'Rendered Latex'
             render_layer.attrib['{%s}groupmode' % INKSCAPE_NS] = 'layer'
@@ -219,7 +240,7 @@ class SvgParser:
             lat2svg.load_preamble(self.options.preamble)
             render_layer.attrib['{%s}preamble' % RENDLTX_NS] = self.options.preamble
         else:
-            logln("Using a previous render layer...")
+            log_debug("Using a previous render layer...")
             preamble_path = render_layer.attrib['{%s}preamble' % RENDLTX_NS]
             if self.options.preamble is not None:
                 lat2svg.load_preamble(self.options.preamble)
@@ -230,7 +251,7 @@ class SvgParser:
             if self.options.depth > 0 and txt.xpath('count(ancestor::*)') > self.options.depth + 1:
                     continue
 
-            logln("ID: " + txt.attrib['id'])
+            log_debug("ID: " + txt.attrib['id'])
 
             latex_string = ""
             txt_empty = True
@@ -245,11 +266,11 @@ class SvgParser:
                 else:
                     latex_string += '\n'
             if txt_empty:
-                logln("Empty text element, skipping...")
+                log_debug("Empty text element, skipping...")
                 continue
             if self.options.math and latex_string[0] is not '$':
                 latex_string = '$' + latex_string + '$'
-            logln(latex_string)
+            log_debug(latex_string)
             rendergroup = lat2svg.render(latex_string, self.options.scale)
             rendergroup = self.align_placement(rendergroup, txt)
             rendergroup = self.apply_style(rendergroup, txt)
@@ -289,17 +310,17 @@ class Latex2SvgRenderer:
                                  startupinfo=info)
             out, err = p.communicate()
         except OSError as err:
-            logln("Command %s failed: %s" % (' '.join(cmd), err))
+            log_error("\nCommand \"%s\" > failed: %s" % (' '.join(cmd), err))
             raise RuntimeError()
 
         if ok_return_value is not None and p.returncode != ok_return_value:
-            logln("Command %s failed (code %d): \n\n %s" % (' '.join(cmd), p.returncode, out + err))
+            log_error("\nCommand \"%s\" failed (code %d): \n\n %s" % (' '.join(cmd), p.returncode, out + err))
             raise RuntimeError()
         return out + err
 
     def load_preamble(self, filename):
         if filename:
-            logln("Loading preamble from " + filename)
+            log_debug("Loading preamble from " + filename)
             with open(filename, 'r') as preamble_file:
                 self.preamble = preamble_file.read()
 
@@ -352,11 +373,11 @@ r"""\documentclass{article}
             cmdlog = self.__exec_command(cmd)
         except RuntimeError as error:
             # TODO: cleanup excpetion handling and excception chains
-            logln(cmdlog)
-            raise RuntimeError("Your LaTeX code has problems:\n\n{errors}".format(errors=cmdlog))
+            log_error(cmdlog)
+            raise RuntimeError()
 
         if not os.path.exists(os.path.join(tmp_path, 'tmp.pdf')):
-            logln("pdflatex didn't produce output ", os.path.join(tmp_path, 'tmp.pdf'))
+            log_error("pdflatex didn't produce output ", os.path.join(tmp_path, 'tmp.pdf'))
             # TODO: cleanup excpetion handling and excception chains
             raise RuntimeError()
 
@@ -421,8 +442,13 @@ else:
     parser = OptionParser(usage="usage: %prog [options] SVGfile")
     add_options(parser)
     (options, args) = parser.parse_args()
+
+    if options.verbose is True:
+        VERBOSE = True
+
     if len(args) < 1:
-        print('No input file specified! Call with -h argument for usage instructions.')
+        log_error('No input file specified! Call with -h argument for usage instructions.')
+        sys.exit(1)
         sys.exit(1)
 
     # setup the SVG processor
