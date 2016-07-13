@@ -31,6 +31,7 @@ NSS = {
     u'rendltx': RENDLTX_NS,
 }
 
+
 def logln(*msg):
     global QUIET
     global STANDALONE
@@ -57,7 +58,7 @@ except ImportError:
 class SvgTransformer:
 
     def __init_matrix(self):
-        matrix = [[0]*3 for i in range(3)]
+        matrix = [[0] * 3 for i in range(3)]
         matrix[0][0] = 1
         matrix[1][1] = 1
         matrix[2][2] = 1
@@ -73,7 +74,7 @@ class SvgTransformer:
         zip_b = zip(*b)
         # uncomment next line if python 3 :
         # zip_b = list(zip_b)
-        return [[sum(ele_a*ele_b for ele_a, ele_b in zip(row_a, col_b))
+        return [[sum(ele_a * ele_b for ele_a, ele_b in zip(row_a, col_b))
                  for col_b in zip_b] for row_a in a]
 
     def apply(self, attrStr):
@@ -96,8 +97,6 @@ class SvgTransformer:
             self.matrix = self.__matmult(new_matrix, self.matrix)
 
     def toString(self):
-        #return "translate(%f,%f)" % (self.x, self.y)
-        #return ""
         return "matrix(%f,%f,%f,%f,%f,%f)" % (self.matrix[0][0], self.matrix[1][0], self.matrix[0][1], self.matrix[1][1], self.matrix[0][2], self.matrix[1][2])
 
     def parseString(self, attrStr):
@@ -228,7 +227,7 @@ class SvgParser:
                 lat2svg.load_preamble(preamble_path)
 
         for txt in self.docroot.findall('.//{%s}text' % SVG_NS):
-            if self.options.depth > 0  and txt.xpath('count(ancestor::*)') > self.options.depth + 1:
+            if self.options.depth > 0 and txt.xpath('count(ancestor::*)') > self.options.depth + 1:
                     continue
 
             logln("ID: " + txt.attrib['id'])
@@ -397,8 +396,8 @@ if STANDALONE is False:
             inkex.Effect.__init__(self)
             add_options(self.OptionParser)
             self.OptionParser.add_option("-l", "--log", type='inkbool',
-                      action="store", dest="debug", default=False,
-                      help="show log messages in inkscape")
+                                         action="store", dest="debug", default=False,
+                                         help="show log messages in inkscape")
 
         def effect(self):
             global INKEX_DEBUG
