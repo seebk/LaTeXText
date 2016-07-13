@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import sys
 import os
+import glob
 import platform
 import subprocess
 import tempfile
@@ -424,7 +425,7 @@ r"""\documentclass[%dpt]{%s}
 
 def add_options(parser):
     parser.add_option("-o", "--outfile", dest="outfile",
-                      help="write to output file", metavar="FILE")
+                      help="write to output file or directory", metavar="FILE")
     parser.add_option("-p", "--preamble", dest="preamble", default="",
                       help="latex preamble file", metavar="FILE")
     parser.add_option("-f", "--fontsize", dest="fontsize", default=10, type="int",
@@ -433,10 +434,11 @@ def add_options(parser):
                       help="apply additional scaling")
     parser.add_option("-d", "--depth", dest="depth", default=0, type="int",
                       help="maximum search depth for grouped text elements")
-    parser.add_option("-m", "--math", dest="math", default=False,
+    parser.add_option("-m", "--math", dest="math",
+                      action="store_true",
                       help="encapsulate all text in math mode")
     parser.add_option("-c", "--clean",
-                      action="store_false", dest="clean", default=False,
+                      action="store_true", dest="clean",
                       help="remove all renderings")
 
 if STANDALONE is False:
@@ -446,9 +448,13 @@ if STANDALONE is False:
         def __init__(self):
             inkex.Effect.__init__(self)
             add_options(self.OptionParser)
+            self.OptionParser.set_conflict_handler("resolve")
             self.OptionParser.add_option("-l", "--log", type='inkbool',
                                          action="store", dest="debug", default=False,
                                          help="show log messages in inkscape")
+            self.OptionParser.add_option("-m", "--math", type='inkbool',
+                                         action="store", dest="math", default=False,
+                                         help="encapsulate all text in math mode")
 
         def effect(self):
             global INKEX_DEBUG
@@ -465,27 +471,47 @@ else:
 
     # parse commandline arguments
     from optparse import OptionParser
-    parser = OptionParser(usage="usage: %prog [options] SVGfile")
+    parser = OptionParser(usage="usage: %prog [options] SVGfile(s)")
     add_options(parser)
+    parser.add_option("-v", "--verbose",
+                      action="store_true", dest="verbose")
     (options, args) = parser.parse_args()
 
     if options.verbose is True:
         VERBOSE = True
 
+    # expand wildcards
+    args = [glob.glob(arg) if '*' in arg else arg for arg in args]
+
     if len(args) < 1:
         log_error('No input file specified! Call with -h argument for usage instructions.')
         sys.exit(1)
+    elif len(args) > 2 and options.outfile and not os.path.isdir(options.outfile):
+        log_error('If more than one input file is specified -o/--outfile has to point to a directory.')
         sys.exit(1)
 
-    # setup the SVG processor
-    svgparse = SvgParser(args[-1], options)
-    result = svgparse.run()
+    # main loop, run the SVG processor for each input file
+    for infile in args:
+        if options.outfile:
+            if os.path.isdir(options.outfile):
+                outfile = os.path.join(options.outfile, os.path.basename(infile))
+            else:
+                outfile = options.outfile
+        else:
+            outfile = infile
 
-    # write processed XML to a file
-    xmlstr = etree.tostring(result, pretty_print=True, xml_declaration=True)
-    if options.outfile:
-        f = open(options.outfile, 'w')
-    else:
-        f = open(args[-1], 'w')
-    f.write(xmlstr.decode('utf-8'))
-    f.close()
+        log_info("Rendering " + infile + " -> " + outfile)
+
+        svgparse = SvgParser(infile, options)
+
+        try:
+            result = svgparse.run()
+        except RuntimeError:
+            log_error("ERROR while rendering " + infile)
+            sys.exit(1)
+
+        # write processed XML to a file
+        xmlstr = etree.tostring(result, pretty_print=True, xml_declaration=True)
+        f = open(outfile, 'w')
+        f.write(xmlstr.decode('utf-8'))
+        f.close()
