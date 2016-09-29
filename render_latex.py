@@ -69,6 +69,7 @@ def log_write(log_level, *msg):
 try:
     import inkex
     inkex.localize()
+    EXT_PATH = os.path.abspath(os.path.split(inkex.__file__)[0])
     STANDALONE = False
 except ImportError:
     STANDALONE = True
@@ -407,7 +408,11 @@ r"""\documentclass[%dpt]{%s}
             raise RuntimeError()
 
         # Convert PDF to SVG
-        self.__exec_command(['pdf2svg', os.path.join(tmp_path, 'tmp.pdf'), os.path.join(tmp_path, 'tmp.svg'), '1'])
+        if PLATFORM == WINDOWS:
+            PDF2SVG_PATH = os.path.join(os.path.realpath(EXT_PATH), 'pdf2svg')
+        else:
+            PDF2SVG_PATH = ''
+        self.__exec_command([os.path.join(PDF2SVG_PATH, 'pdf2svg'), os.path.join(tmp_path, 'tmp.pdf'), os.path.join(tmp_path, 'tmp.svg'), '1'])
 
         tree = etree.parse(os.path.join(tmp_path, 'tmp.svg'))
         root = tree.getroot()

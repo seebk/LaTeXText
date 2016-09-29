@@ -14,9 +14,28 @@ Required packages on Debian-based distributions:
 Run the `install.sh` script to copy all required files into the Inkscape
 extension folder in your home directory.
 
+
 ### Windows
 
-TODO
+Required Software:
+
+   * Inkscape (version >= 0.91)
+   * MiKTeX 2.9
+   * pdf2svg
+
+Instructions:
+
+  1. Navigate to the Inkscape extension folder in the Explorer.  If Inkscape is
+  installed in C:/Program Files/Inkscape/ the extension directory is at
+  C:/Program Files/Inkscape/share/extensions/.
+
+  2. Copy the `render_latex.inx` and `render_latex.py` to the extension folder.
+
+  3. Download the whole pdf2svg repository from
+  https://github.com/jalios/pdf2svg-windows as a .zip file and copy the containing
+  `dist-32bits` subfolder to the Inkscape extension folder. Rename it to
+  `pdf2svg` afterwards.
+
 
 ### Mac OS X
 
@@ -29,7 +48,7 @@ Required Software:
 
 Instructions:
 
-  1. Open a command terminal and check if you can execute pdflatex. If it is not
+  1. Open a command terminal and check if you can execute `pdflatex`. If it is not
   found verify if MacTex is up-to-date and properly installed.
 
   2. Install pdf2svg from Homebrew. In a terminal type `brew install pdf2svg`.
@@ -41,7 +60,6 @@ Instructions:
         $ sudo pip install lxml
 
   4. Run the install script with `./install.sh`.
-
 
 
 # Usage
