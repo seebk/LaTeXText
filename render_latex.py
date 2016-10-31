@@ -179,7 +179,8 @@ class SvgProcessor:
         self.options = options
         self.svg_input = infile
 
-        self.defaults = dict2obj({"scale": 1.0, "fontsize": 10, "preamble": "", "math": False})
+        self.defaults = dict2obj({"scale": 1.0, "fontsize": 10, "preamble": "",
+                                  "math": False, "newline": False})
 
         # load from file or use existing document root
         if isinstance(infile, str):
@@ -202,6 +203,8 @@ class SvgProcessor:
             self.options.preamble = self.defaults.preamble
         if self.options.math is None:
             self.options.math = self.defaults.math
+        if self.options.newline is None:
+            self.options.newline = self.defaults.newline
 
     def add_id_prefix(self, node, prefix):
         for el in node.xpath('//*[attribute::id]'):
@@ -300,6 +303,10 @@ class SvgProcessor:
         if self.options.fontsize is None and fontsize is not None:
             self.options.fontsize = round(float(fontsize))
 
+        newline = render_layer.attrib.get('{%s}newline' % RENDLTX_NS, None)
+        if self.options.newline is None and newline is not None:
+            self.options.newline = newline in ('True', 'true')
+
         math = render_layer.attrib.get('{%s}math' % RENDLTX_NS, None)
         if self.options.math is None and math is not None:
             self.options.math = math in ('True', 'true')
@@ -316,6 +323,9 @@ class SvgProcessor:
 
         if self.options.fontsize is not None:
             render_layer.attrib['{%s}fontsize' % RENDLTX_NS] = str(self.options.fontsize)
+
+        if self.options.newline is not None:
+            render_layer.attrib['{%s}newline' % RENDLTX_NS] = str(self.options.newline)
 
         if self.options.math is not None:
             render_layer.attrib['{%s}math' % RENDLTX_NS] = str(self.options.math)
@@ -339,6 +349,11 @@ class SvgProcessor:
         if self.options.preamble is not None:
             lat2svg.load_preamble(self.options.preamble)
 
+        if self.options.newline is True:
+            line_ending = '\\newline\n'
+        else:
+            line_ending = '\n'
+
         for txt in self.docroot.findall('.//{%s}text' % SVG_NS):
             if self.options.depth > 0 and txt.xpath('count(ancestor::*)') > self.options.depth + 1:
                     continue
@@ -348,15 +363,15 @@ class SvgProcessor:
             latex_string = ""
             txt_empty = True
             if txt.text:
-                latex_string += txt.text + '\n'
+                latex_string += txt.text + line_ending
                 txt_empty = False
             tspans = txt.findall('{%s}tspan' % SVG_NS)
             for ts in tspans:
                 if ts.text:
-                    latex_string += ts.text + '\n'
+                    latex_string += ts.text + line_ending
                     txt_empty = False
                 else:
-                    latex_string += '\n'
+                    latex_string += line_ending
             if txt_empty:
                 log_debug("Empty text element, skipping...")
                 continue
@@ -511,6 +526,9 @@ def add_options(parser):
                       help="apply additional scaling")
     parser.add_option("-d", "--depth", dest="depth", type="int",
                       help="maximum search depth for grouped text elements")
+    parser.add_option("-n", "--newline", dest="newline",
+                      action="store_true",
+                      help="insert \newline at every line break")
     parser.add_option("-m", "--math", dest="math",
                       action="store_true",
                       help="encapsulate all text in math mode")
@@ -528,6 +546,9 @@ if STANDALONE is False:
             self.OptionParser.add_option("-l", "--log", type='inkbool',
                                          action="store", dest="debug", default=False,
                                          help="show log messages in inkscape")
+            self.OptionParser.add_option("-n", "--newline", dest="newline",
+                                         action="store", type='inkbool',
+                                         help="insert \newline at every line break")
             self.OptionParser.add_option("-m", "--math", type='inkbool',
                                          action="store", dest="math",
                                          help="encapsulate all text in math mode")

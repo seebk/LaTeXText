@@ -8,6 +8,7 @@
 	<param name="depth" type="int" min="0" max="100" gui-text="Max. search depth">0</param>
 	<param name="fontsize" type="int" min="4" max="36" gui-text="Document base font size">10</param>
 	<param name="scale" type="float" precision="2" min="0.1" max="100" gui-text="Scale">1.0</param>
+	<param name="newline" type="boolean" gui-text="Add \newline at every line break">false</param>
 	<param name="math" type="boolean" gui-text="Encapsulate all text in math mode">false</param>
 	<param name="log" type="boolean" gui-text="Show log messages">false</param>
 	<effect>

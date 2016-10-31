@@ -79,6 +79,12 @@ class Gtk3ParamGui(Gtk.Window):
         grid.attach(self.entryScale, 1, row_count, 1, 1)
 
         row_count += 1
+        grid.attach(Gtk.Label("Add \\newline at every line break"), 0, row_count, 1, 1)
+        self.btnNewline = Gtk.CheckButton()
+        self.btnNewline.set_active(options.newline)
+        grid.attach(self.btnNewline, 1, row_count, 1, 1)
+
+        row_count += 1
         grid.attach(Gtk.Label("Encapsulate all text with ($..$)"), 0, row_count, 1, 1)
         self.btnMath = Gtk.CheckButton()
         self.btnMath.set_active(options.math)
@@ -129,6 +135,7 @@ class Gtk3ParamGui(Gtk.Window):
         self.options.fontsize = self.entryFontsize.get_value()
         self.options.preamble = self.entryPreamble.get_text()
         self.options.math = self.btnMath.get_active()
+        self.options.newline = self.btnNewline.get_active()
         if self.btnShowLog.get_active() is True:
             set_log_level(log_level_debug)
         try:
