@@ -14,9 +14,8 @@ MAC = "Mac OS"
 WINDOWS = "Windows"
 PLATFORM = platform.system()
 
-INKEX_DEBUG = False
 STANDALONE = False
-VERBOSE = False
+LOG_LEVEL = 3
 
 
 ######################
@@ -43,32 +42,39 @@ log_level_error = 3
 
 
 def log_info(*msg):
-    log_write(log_level_info, *msg)
+    log_message(log_level_info, *msg)
 
 
 def log_debug(*msg):
-    log_write(log_level_debug, *msg)
+    log_message(log_level_debug, *msg)
 
 
 def log_error(*msg):
-    log_write(log_level_error, *msg)
+    log_message(log_level_error, *msg)
 
 
-def log_write(log_level, *msg):
-    global VERBOSE
+def log_message(msg_level, *msg):
+    global LOG_LEVEL
+    if LOG_LEVEL > msg_level:
+        return
+
     global STANDALONE
     if STANDALONE:
-        if VERBOSE or log_level == log_level_error or log_level == log_level_info:
-            print(*msg)
-    elif INKEX_DEBUG is True:
+        print(*msg)
+    else:
         for m in msg:
             inkex.debug(m)
+
+
+def set_log_level(l):
+    global LOG_LEVEL
+    LOG_LEVEL = l
+
 
 ######################
 #  Check if we are in the inkscape extension folder
 try:
     import inkex
-    inkex.localize()
     EXT_PATH = os.path.abspath(os.path.split(inkex.__file__)[0])
     STANDALONE = False
 except ImportError:
@@ -146,16 +152,34 @@ class SvgTransformer:
         else:
             return None, None
 
+# https://gist.github.com/Leechael/8144525
+class dict2obj(dict):
+    def __init__(self, d, default=None):
+        self.__d = d
+        self.__default = default
+        super(self.__class__, self).__init__(d)
+
+    def __getattr__(self, k):
+        if k in self.__d:
+            v = self.__d[k]
+            if isinstance(v, dict):
+                v = self.__class__(v)
+            setattr(self, k, v)
+            return v
+        return self.__default
+
 
 ######################
-# SVG parser
+# SVG processor
 #    Retrieve all text elements, render them with Latex and add the result in
 #    a new layer
-class SvgParser:
+class SvgProcessor:
 
     def __init__(self, infile, options):
         self.options = options
         self.svg_input = infile
+
+        self.defaults = dict2obj({"scale": 1.0, "fontsize": 10, "preamble": "", "math": False})
 
         # load from file or use existing document root
         if isinstance(infile, str):
@@ -163,6 +187,21 @@ class SvgParser:
             self.docroot = tree.getroot()
         else:
             self.docroot = infile.getroot()
+
+        # check for render layer and try to read options
+        render_layer = self.docroot.find("{%s}g[@id='ltx-render-layer']" % SVG_NS)
+        if render_layer is not None:
+            self.get_options(render_layer)
+
+        # set defaults if any required option is still None
+        if self.options.scale is None:
+            self.options.scale = self.defaults.scale
+        if self.options.fontsize is None:
+            self.options.fontsize = self.defaults.fontsize
+        if self.options.preamble is None:
+            self.options.preamble = self.defaults.preamble
+        if self.options.math is None:
+            self.options.math = self.defaults.math
 
     def add_id_prefix(self, node, prefix):
         for el in node.xpath('//*[attribute::id]'):
@@ -245,11 +284,47 @@ class SvgParser:
 
         return node
 
+    def get_options(self, render_layer):
+        if render_layer is None:
+            return
+
+        preamble_path = render_layer.attrib.get('{%s}preamble' % RENDLTX_NS, None)
+        if self.options.preamble is None and preamble_path:
+            self.options.preamble = preamble_path
+
+        scale = render_layer.attrib.get('{%s}scale' % RENDLTX_NS, None)
+        if self.options.scale is None and scale is not None:
+            self.options.scale = float(scale)
+
+        fontsize = render_layer.attrib.get('{%s}fontsize' % RENDLTX_NS, None)
+        if self.options.fontsize is None and fontsize is not None:
+            self.options.fontsize = round(float(fontsize))
+
+        math = render_layer.attrib.get('{%s}math' % RENDLTX_NS, None)
+        if self.options.math is None and math is not None:
+            self.options.math = math in ('True', 'true')
+
+    def store_otions(self, render_layer):
+        if render_layer is None:
+            return
+
+        if self.options.preamble is not None:
+            render_layer.attrib['{%s}preamble' % RENDLTX_NS] = self.options.preamble
+
+        if self.options.scale is not None:
+            render_layer.attrib['{%s}scale' % RENDLTX_NS] = str(self.options.scale)
+
+        if self.options.fontsize is not None:
+            render_layer.attrib['{%s}fontsize' % RENDLTX_NS] = str(self.options.fontsize)
+
+        if self.options.math is not None:
+            render_layer.attrib['{%s}math' % RENDLTX_NS] = str(self.options.math)
+
     def run(self):
 
         lat2svg = Latex2SvgRenderer()
 
-        # check for render layer or add new one
+        # check for existing render layer or add new one
         render_layer = self.docroot.find("{%s}g[@id='ltx-render-layer']" % SVG_NS)
         if render_layer is None:
             log_debug("Creating a new render layer...")
@@ -258,15 +333,11 @@ class SvgParser:
             render_layer.attrib['{%s}groupmode' % INKSCAPE_NS] = 'layer'
             render_layer.attrib['id'] = 'ltx-render-layer'
             self.docroot.append(render_layer)
-            lat2svg.load_preamble(self.options.preamble)
-            render_layer.attrib['{%s}preamble' % RENDLTX_NS] = self.options.preamble
         else:
             log_debug("Using a previous render layer...")
-            preamble_path = render_layer.attrib.get('{%s}preamble' % RENDLTX_NS, None)
-            if self.options.preamble is not None:
-                lat2svg.load_preamble(self.options.preamble)
-            elif preamble_path:
-                lat2svg.load_preamble(preamble_path)
+
+        if self.options.preamble is not None:
+            lat2svg.load_preamble(self.options.preamble)
 
         for txt in self.docroot.findall('.//{%s}text' % SVG_NS):
             if self.options.depth > 0 and txt.xpath('count(ancestor::*)') > self.options.depth + 1:
@@ -298,6 +369,7 @@ class SvgParser:
             self.add_id_prefix(rendergroup, 'lx-' + txt.attrib['id'])
             self.insert_node(rendergroup, render_layer)
 
+        self.store_otions(render_layer)
         return self.docroot
 
 
@@ -431,13 +503,13 @@ r"""\documentclass[%dpt]{%s}
 def add_options(parser):
     parser.add_option("-o", "--outfile", dest="outfile",
                       help="write to output file or directory", metavar="FILE")
-    parser.add_option("-p", "--preamble", dest="preamble", default="",
+    parser.add_option("-p", "--preamble", dest="preamble",
                       help="latex preamble file", metavar="FILE")
-    parser.add_option("-f", "--fontsize", dest="fontsize", default=10, type="int",
+    parser.add_option("-f", "--fontsize", dest="fontsize", type="int",
                       help="latex base font size")
-    parser.add_option("-s", "--scale", dest="scale", default=1, type="float",
+    parser.add_option("-s", "--scale", dest="scale", type="float",
                       help="apply additional scaling")
-    parser.add_option("-d", "--depth", dest="depth", default=0, type="int",
+    parser.add_option("-d", "--depth", dest="depth", type="int",
                       help="maximum search depth for grouped text elements")
     parser.add_option("-m", "--math", dest="math",
                       action="store_true",
@@ -447,7 +519,6 @@ def add_options(parser):
                       help="remove all renderings")
 
 if STANDALONE is False:
-
     # Create an Inkscape extension
     class RenderLatexEffect(inkex.Effect):
         def __init__(self):
@@ -458,32 +529,27 @@ if STANDALONE is False:
                                          action="store", dest="debug", default=False,
                                          help="show log messages in inkscape")
             self.OptionParser.add_option("-m", "--math", type='inkbool',
-                                         action="store", dest="math", default=False,
+                                         action="store", dest="math",
                                          help="encapsulate all text in math mode")
 
         def effect(self):
-            global INKEX_DEBUG
             if self.options.debug is True:
-                INKEX_DEBUG = True
-            svgparse = SvgParser(self.document, self.options)
-            svgparse.run()
+                set_log_level(log_level_debug)
+            svgprocessor = SvgProcessor(self.document, self.options)
+            svgprocessor.run()
 
-    # run the extension
-    effect = RenderLatexEffect()
-    effect.affect()
 
-else:
-
+def main_standalone():
     # parse commandline arguments
     from optparse import OptionParser
     parser = OptionParser(usage="usage: %prog [options] SVGfile(s)")
     add_options(parser)
-    parser.add_option("-v", "--verbose",
+    parser.add_option("-v", "--verbose", default=False,
                       action="store_true", dest="verbose")
     (options, args) = parser.parse_args()
 
     if options.verbose is True:
-        VERBOSE = True
+        set_log_level(log_level_debug)
 
     # expand wildcards
     args = [glob.glob(arg) if '*' in arg else arg for arg in args]
@@ -507,10 +573,10 @@ else:
 
         log_info("Rendering " + infile + " -> " + outfile)
 
-        svgparse = SvgParser(infile, options)
+        svgprocessor = SvgProcessor(infile, options)
 
         try:
-            result = svgparse.run()
+            result = svgprocessor.run()
         except RuntimeError:
             log_error("ERROR while rendering " + infile)
             sys.exit(1)
@@ -520,3 +586,11 @@ else:
         f = open(outfile, 'w')
         f.write(xmlstr.decode('utf-8'))
         f.close()
+
+if __name__ == "__main__":
+    if STANDALONE is False:
+        # run the extension
+        effect = RenderLatexEffect()
+        effect.affect()
+    else:
+        main_standalone()
