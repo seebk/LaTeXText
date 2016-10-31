@@ -25,6 +25,7 @@ SVG_NS = u"http://www.w3.org/2000/svg"
 INKSCAPE_NS = u"http://www.inkscape.org/namespaces/inkscape"
 XLINK_NS = u"http://www.w3.org/1999/xlink"
 RENDLTX_NS = u"http://NOTSET"
+etree.register_namespace("rendltx", RENDLTX_NS)
 
 NSS = {
     u'inkscape': INKSCAPE_NS,
