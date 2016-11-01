@@ -25,7 +25,6 @@ SVG_NS = u"http://www.w3.org/2000/svg"
 INKSCAPE_NS = u"http://www.inkscape.org/namespaces/inkscape"
 XLINK_NS = u"http://www.w3.org/1999/xlink"
 RENDLTX_NS = u"http://NOTSET"
-etree.register_namespace("rendltx", RENDLTX_NS)
 
 NSS = {
     u'inkscape': INKSCAPE_NS,
@@ -33,6 +32,10 @@ NSS = {
     u'xlink': XLINK_NS,
     u'rendltx': RENDLTX_NS,
 }
+
+# uncocmment this if newer LXML versions are shipped with Inkscape on Windows
+# then remove nsmap=NSS syntax and register namespaces globally
+# etree.register_namespace("rendltx", RENDLTX_NS)
 
 ######################
 # logging functions
@@ -339,7 +342,7 @@ class SvgProcessor:
         render_layer = self.docroot.find("{%s}g[@id='ltx-render-layer']" % SVG_NS)
         if render_layer is None:
             log_debug("Creating a new render layer...")
-            render_layer = etree.Element('g')
+            render_layer = etree.Element('g',  nsmap=NSS)
             render_layer.attrib['{%s}label' % INKSCAPE_NS] = 'Rendered Latex'
             render_layer.attrib['{%s}groupmode' % INKSCAPE_NS] = 'layer'
             render_layer.attrib['id'] = 'ltx-render-layer'
