@@ -7,6 +7,7 @@ import glob
 import platform
 import subprocess
 import tempfile
+import shutil
 from lxml import etree
 
 
@@ -513,6 +514,7 @@ r"""\documentclass[%dpt]{%s}
             rendergroup.append(e)
 
         os.chdir(old_cwd)
+        shutil.rmtree(tmp_path)  # delete temp directory
         return rendergroup
 
 
