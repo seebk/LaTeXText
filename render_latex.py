@@ -212,7 +212,7 @@ class SvgProcessor:
             self.options.newline = self.defaults.newline
 
     def add_id_prefix(self, node, prefix):
-        for el in node.xpath('//*[attribute::id]'):
+        for el in node.xpath('//*[attribute::id]', namespaces=NSS):
             el.attrib['id'] = prefix + "-" + el.attrib['id']
         for el in node.xpath('//*[attribute::xlink:href]', namespaces=NSS):
             old_href = el.attrib['{%s}href' % XLINK_NS]
@@ -252,9 +252,9 @@ class SvgProcessor:
 
     def align_placement(self, node, txt):
         if 'x' in txt.attrib and 'y' in txt.attrib:
-            new_pos = (float(txt.attrib['x']), float(txt.attrib['y']))
+            aligned_pos = (float(txt.attrib['x']), float(txt.attrib['y']))
         else:
-            new_pos = (0, 0)
+            aligned_pos = (0, 0)
 
         # remove position offset, anchor is top/right most element
         pos_list = list()
@@ -266,19 +266,21 @@ class SvgProcessor:
         pos_list.sort()
         pos_offset = pos_list[0]
 
-        for el in node.getiterator():
-            if 'x' in el.attrib:
-                el.attrib['x'] = str(float(el.attrib['x']) - pos_offset[0] + new_pos[0])
-            if 'y' in el.attrib:
-                el.attrib['y'] = str(float(el.attrib['y']) - pos_offset[1] + new_pos[1])
-
-        transform = SvgTransformer()
-
         # unit conversion between Latex output and SVG file
         # factor 1.25 was determined empirically for pdflatex -> inkscape
+        # 1pt = 1.25px
         # TODO: apply generic unit conversion
-        transform.scale(1.25)
-        transform.translate(-0.25 * new_pos[0], -0.25 * new_pos[1])
+        unit_conversion_factor = 1.25
+
+        for el in node.getiterator():
+            if 'x' in el.attrib:
+                el.attrib['x'] = str(float(el.attrib['x']) - pos_offset[0])
+            if 'y' in el.attrib:
+                el.attrib['y'] = str(float(el.attrib['y']) - pos_offset[1])
+
+        transform = SvgTransformer()
+        transform.scale(unit_conversion_factor)
+        transform.translate(aligned_pos[0], aligned_pos[1])
 
         if 'transform' in txt.attrib:
             transform.apply(txt.attrib['transform'])
