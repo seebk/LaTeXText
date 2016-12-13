@@ -34,8 +34,8 @@ NSS = {
     u'rendltx': RENDLTX_NS,
 }
 
-# uncocmment this if newer LXML versions are shipped with Inkscape on Windows
-# then remove nsmap=NSS syntax and register namespaces globally
+# uncocmment the following to register namespaces globally if newer LXML versions
+# are shipped with Inkscape on Windows, then remove 'nsmap=NSS' syntax
 # etree.register_namespace("rendltx", RENDLTX_NS)
 
 ######################
@@ -91,61 +91,24 @@ except ImportError:
 #    Parse, modify and create SVG transform attributes
 class SvgTransformer:
 
-    def __init_matrix(self):
-        matrix = [[0] * 3 for i in range(3)]
-        matrix[0][0] = 1
-        matrix[1][1] = 1
-        matrix[2][2] = 1
-        return matrix
-
-    def __init__(self, attrStr=""):
-        self.matrix = self.__init_matrix()
-        self.transform_type = ""
-        if attrStr:
-            self.parseString(attrStr)
-
-    def __matmult(self, a, b):
+    # matrix multiplication helper function
+    def _matmult(self, a, b):
         zip_b = zip(*b)
         # uncomment next line if python 3 :
         # zip_b = list(zip_b)
         return [[sum(ele_a * ele_b for ele_a, ele_b in zip(row_a, col_b))
                  for col_b in zip_b] for row_a in a]
 
-    def apply(self, attrStr):
-        coordList, transform_type = self.parseString(attrStr)
-        if transform_type == "translate":
-            new_matrix = self.__init_matrix()
-            new_matrix[0][2] = coordList[0]
-            new_matrix[1][2] = coordList[1]
-            self.matrix = self.__matmult(new_matrix, self.matrix)
-        elif transform_type == "matrix":
-            log_debug(coordList)
-            new_matrix = self.__init_matrix()
-            log_debug(new_matrix)
-            new_matrix[0][0] = coordList[0]
-            new_matrix[1][0] = coordList[1]
-            new_matrix[0][1] = coordList[2]
-            new_matrix[1][1] = coordList[3]
-            new_matrix[0][2] = coordList[4]
-            new_matrix[1][2] = coordList[5]
-            self.matrix = self.__matmult(new_matrix, self.matrix)
+    # init a neutral transform matrix
+    def _init_matrix(self):
+        matrix = [[0] * 3 for i in range(3)]
+        matrix[0][0] = 1
+        matrix[1][1] = 1
+        matrix[2][2] = 1
+        return matrix
 
-    def scale(self, factor):
-        new_matrix = self.__init_matrix()
-        new_matrix[0][0] = factor
-        new_matrix[1][1] = factor
-        self.matrix = self.__matmult(new_matrix, self.matrix)
-
-    def translate(self, x, y):
-        new_matrix = self.__init_matrix()
-        new_matrix[0][2] = x
-        new_matrix[1][2] = y
-        self.matrix = self.__matmult(new_matrix, self.matrix)
-
-    def toString(self):
-        return "matrix(%f,%f,%f,%f,%f,%f)" % (self.matrix[0][0], self.matrix[1][0], self.matrix[0][1], self.matrix[1][1], self.matrix[0][2], self.matrix[1][2])
-
-    def parseString(self, attrStr):
+    # parse an SVG transform command and extract its type and parameters
+    def _parse_transform(self, attrStr):
         if "translate" in attrStr:
             coordStr = attrStr[10:-1]
             coordList = list([float(coord) for coord in coordStr.split(",") if coord])
@@ -156,6 +119,55 @@ class SvgTransformer:
             return coordList, "matrix"
         else:
             return None, None
+
+    # constructor
+    def __init__(self, attrStr=""):
+        self.matrix = self._init_matrix()
+        self.transform_type = ""
+        if attrStr:
+            self.apply_transform(attrStr)
+
+    # apply a transform given in form of a SVG transform command
+    def apply_transform(self, attrStr):
+        coordList, transform_type = self._parse_transform(attrStr)
+        if transform_type == "translate":
+            new_matrix = self._init_matrix()
+            new_matrix[0][2] = coordList[0]
+            new_matrix[1][2] = coordList[1]
+            self.matrix = self._matmult(new_matrix, self.matrix)
+        elif transform_type == "matrix":
+            log_debug(coordList)
+            new_matrix = self._init_matrix()
+            log_debug(new_matrix)
+            new_matrix[0][0] = coordList[0]
+            new_matrix[1][0] = coordList[1]
+            new_matrix[0][1] = coordList[2]
+            new_matrix[1][1] = coordList[3]
+            new_matrix[0][2] = coordList[4]
+            new_matrix[1][2] = coordList[5]
+            self.matrix = self._matmult(new_matrix, self.matrix)
+        else:
+            log_error("\nUnknown transform: " + attrStr)
+            raise RuntimeError()
+
+    # scaling
+    def scale(self, factor):
+        new_matrix = self._init_matrix()
+        new_matrix[0][0] = factor
+        new_matrix[1][1] = factor
+        self.matrix = self._matmult(new_matrix, self.matrix)
+
+    # translate
+    def translate(self, x, y):
+        new_matrix = self._init_matrix()
+        new_matrix[0][2] = x
+        new_matrix[1][2] = y
+        self.matrix = self._matmult(new_matrix, self.matrix)
+
+    # return current transformation as SVG transform matrix string
+    def to_string(self):
+        return "matrix(%f,%f,%f,%f,%f,%f)" % (self.matrix[0][0], self.matrix[1][0], self.matrix[0][1], self.matrix[1][1], self.matrix[0][2], self.matrix[1][2])
+
 
 # https://gist.github.com/Leechael/8144525
 class dict2obj(dict):
@@ -197,7 +209,7 @@ class SvgProcessor:
         # check for render layer and try to read options
         render_layer = self.docroot.find("{%s}g[@id='ltx-render-layer']" % SVG_NS)
         if render_layer is not None:
-            self.get_options(render_layer)
+            self.get_parameters(render_layer)
 
         # set defaults if any required option is still None
         if self.options.scale is None:
@@ -283,18 +295,18 @@ class SvgProcessor:
         transform.translate(aligned_pos[0], aligned_pos[1])
 
         if 'transform' in txt.attrib:
-            transform.apply(txt.attrib['transform'])
+            transform.apply_transform(txt.attrib['transform'])
 
         for el in txt.iterancestors():
             if 'transform' in el.attrib:
-                transform.apply(el.attrib['transform'])
+                transform.apply_transform(el.attrib['transform'])
 
-        log_debug(transform.toString())
-        node.attrib['transform'] = transform.toString()
+        log_debug(transform.to_string())
+        node.attrib['transform'] = transform.to_string()
 
         return node
 
-    def get_options(self, render_layer):
+    def get_parameters(self, render_layer):
         if render_layer is None:
             return
 
@@ -318,7 +330,7 @@ class SvgProcessor:
         if self.options.math is None and math is not None:
             self.options.math = math in ('True', 'true')
 
-    def store_otions(self, render_layer):
+    def store_parameters(self, render_layer):
         if render_layer is None:
             return
 
@@ -345,16 +357,13 @@ class SvgProcessor:
         render_layer = self.docroot.find("{%s}g[@id='ltx-render-layer']" % SVG_NS)
         if render_layer is None:
             log_debug("Creating a new render layer...")
-            render_layer = etree.Element('g',  nsmap=NSS)
+            render_layer = etree.Element('g', nsmap=NSS)
             render_layer.attrib['{%s}label' % INKSCAPE_NS] = 'Rendered Latex'
             render_layer.attrib['{%s}groupmode' % INKSCAPE_NS] = 'layer'
             render_layer.attrib['id'] = 'ltx-render-layer'
             self.docroot.append(render_layer)
         else:
             log_debug("Using a previous render layer...")
-
-        if self.options.preamble is not None:
-            lat2svg.load_preamble(self.options.preamble)
 
         if self.options.newline is True:
             line_ending = '\\newline\n'
@@ -385,24 +394,21 @@ class SvgProcessor:
             if self.options.math and latex_string[0] is not '$':
                 latex_string = '$' + latex_string + '$'
             log_debug(latex_string)
-            rendergroup = lat2svg.render(latex_string, self.options.fontsize, self.options.scale)
+            rendergroup = lat2svg.render(latex_string, self.options.preamble, self.options.fontsize, self.options.scale)
             rendergroup = self.align_placement(rendergroup, txt)
             rendergroup = self.apply_style(rendergroup, txt)
             self.add_id_prefix(rendergroup, 'lx-' + txt.attrib['id'])
             self.insert_node(rendergroup, render_layer)
 
-        self.store_otions(render_layer)
+        self.store_parameters(render_layer)
         return self.docroot
 
 
 ######################
-#  Main converter class
+#  Render some latex code and return it as a SVG XML group node
 class Latex2SvgRenderer:
 
-    def __init__(self):
-        self.preamble = ""
-
-    def __exec_command(self, cmd, ok_return_value=0):
+    def _exec_command(self, cmd, ok_return_value=0):
         """
         Run given command, check return value, and return
         concatenated stdout and stderr.
@@ -433,20 +439,18 @@ class Latex2SvgRenderer:
             raise RuntimeError()
         return out + err
 
-    def load_preamble(self, filename):
-        if filename:
-            log_debug("Loading preamble from " + filename)
-            with open(filename, 'r') as preamble_file:
-                self.preamble = preamble_file.read()
-
-    def render(self, latex_code, fontsize=10, scale=1):
-        """
-        Create a SVG file from latex code
-        """
+    # render given latex code and return the result as an SVG group element
+    def render(self, latex_code, preamble_file=None, fontsize=10, scale=1):
 
         # Options pass to LaTeX-related commands
         latexOpts = ['-interaction=nonstopmode',
                      '-halt-on-error']
+
+        preamble = ""
+        if preamble_file:
+            log_debug("Loading preamble from " + preamble_file)
+            with open(preamble_file, 'r') as preamble_file:
+                preamble = preamble_file.read()
 
         if fontsize in [10, 11, 12]:
             doc_class = "article"
@@ -466,7 +470,7 @@ r"""\documentclass[%dpt]{%s}
 \begin{document}
     %s
 \end{document}""" \
-        % (fontsize, doc_class, self.preamble, scale, scale, latex_code)
+        % (fontsize, doc_class, preamble, scale, scale, latex_code)
 
         # Convert TeX to PDF
 
@@ -490,7 +494,7 @@ r"""\documentclass[%dpt]{%s}
         cmdlog = ""
         try:
             cmd = [os.path.join(LATEX_PATH, 'pdflatex'), texfile_path] + latexOpts
-            cmdlog = self.__exec_command(cmd)
+            cmdlog = self._exec_command(cmd)
         except RuntimeError as error:
             # TODO: cleanup excpetion handling and excception chains
             log_error(cmdlog)
@@ -506,7 +510,7 @@ r"""\documentclass[%dpt]{%s}
             PDF2SVG_PATH = os.path.join(os.path.realpath(EXT_PATH), 'pdf2svg')
         else:
             PDF2SVG_PATH = ''
-        self.__exec_command([os.path.join(PDF2SVG_PATH, 'pdf2svg'), os.path.join(tmp_path, 'tmp.pdf'), os.path.join(tmp_path, 'tmp.svg'), '1'])
+        self._exec_command([os.path.join(PDF2SVG_PATH, 'pdf2svg'), os.path.join(tmp_path, 'tmp.pdf'), os.path.join(tmp_path, 'tmp.svg'), '1'])
 
         tree = etree.parse(os.path.join(tmp_path, 'tmp.svg'))
         root = tree.getroot()
@@ -523,6 +527,7 @@ r"""\documentclass[%dpt]{%s}
 ######################
 # Init for standalone or Inkscape extension run mode
 
+# commandline options shared by standalone application and inkscape extension
 def add_options(parser):
     parser.add_option("-o", "--outfile", dest="outfile",
                       help="write to output file or directory", metavar="FILE")
@@ -543,6 +548,7 @@ def add_options(parser):
     parser.add_option("-c", "--clean",
                       action="store_true", dest="clean",
                       help="remove all renderings")
+
 
 if STANDALONE is False:
     # Create an Inkscape extension
@@ -566,55 +572,56 @@ if STANDALONE is False:
                 set_log_level(log_level_debug)
             svgprocessor = SvgProcessor(self.document, self.options)
             svgprocessor.run()
+else:
+    # Create a standalone commandline application
+    def main_standalone():
+        # parse commandline arguments
+        from optparse import OptionParser
+        parser = OptionParser(usage="usage: %prog [options] SVGfile(s)")
+        add_options(parser)
+        parser.add_option("-v", "--verbose", default=False,
+                          action="store_true", dest="verbose")
+        (options, args) = parser.parse_args()
 
+        if options.verbose is True:
+            set_log_level(log_level_debug)
 
-def main_standalone():
-    # parse commandline arguments
-    from optparse import OptionParser
-    parser = OptionParser(usage="usage: %prog [options] SVGfile(s)")
-    add_options(parser)
-    parser.add_option("-v", "--verbose", default=False,
-                      action="store_true", dest="verbose")
-    (options, args) = parser.parse_args()
+        # expand wildcards
+        args = [glob.glob(arg) if '*' in arg else arg for arg in args]
 
-    if options.verbose is True:
-        set_log_level(log_level_debug)
-
-    # expand wildcards
-    args = [glob.glob(arg) if '*' in arg else arg for arg in args]
-
-    if len(args) < 1:
-        log_error('No input file specified! Call with -h argument for usage instructions.')
-        sys.exit(1)
-    elif len(args) > 2 and options.outfile and not os.path.isdir(options.outfile):
-        log_error('If more than one input file is specified -o/--outfile has to point to a directory.')
-        sys.exit(1)
-
-    # main loop, run the SVG processor for each input file
-    for infile in args:
-        if options.outfile:
-            if os.path.isdir(options.outfile):
-                outfile = os.path.join(options.outfile, os.path.basename(infile))
-            else:
-                outfile = options.outfile
-        else:
-            outfile = infile
-
-        log_info("Rendering " + infile + " -> " + outfile)
-
-        svgprocessor = SvgProcessor(infile, options)
-
-        try:
-            result = svgprocessor.run()
-        except RuntimeError:
-            log_error("ERROR while rendering " + infile)
+        if len(args) < 1:
+            log_error('No input file specified! Call with -h argument for usage instructions.')
+            sys.exit(1)
+        elif len(args) > 2 and options.outfile and not os.path.isdir(options.outfile):
+            log_error('If more than one input file is specified -o/--outfile has to point to a directory.')
             sys.exit(1)
 
-        # write processed XML to a file
-        xmlstr = etree.tostring(result, pretty_print=True, xml_declaration=True)
-        f = open(outfile, 'w')
-        f.write(xmlstr.decode('utf-8'))
-        f.close()
+        # main loop, run the SVG processor for each input file
+        for infile in args:
+            if options.outfile:
+                if os.path.isdir(options.outfile):
+                    outfile = os.path.join(options.outfile, os.path.basename(infile))
+                else:
+                    outfile = options.outfile
+            else:
+                outfile = infile
+
+            log_info("Rendering " + infile + " -> " + outfile)
+
+            svgprocessor = SvgProcessor(infile, options)
+
+            try:
+                result = svgprocessor.run()
+            except RuntimeError:
+                log_error("ERROR while rendering " + infile)
+                sys.exit(1)
+
+            # write processed XML to a file
+            xmlstr = etree.tostring(result, pretty_print=True, xml_declaration=True)
+            f = open(outfile, 'w')
+            f.write(xmlstr.decode('utf-8'))
+            f.close()
+
 
 if __name__ == "__main__":
     if STANDALONE is False:
