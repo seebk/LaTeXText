@@ -231,11 +231,11 @@ class SvgProcessor:
             el.attrib['{%s}href' % XLINK_NS] = "#" + prefix + "-" + old_href[1:]
         node.attrib['id'] = prefix
 
-    def insert_node(self, node, root):
+    def insert_node(self, node, root, prefix):
         # check if node already exists
         old_node = None
         for el in root.getiterator():
-            if 'id' in el.attrib and el.attrib['id'] == node.attrib['id']:
+            if 'id' in el.attrib and el.attrib['id'] == prefix:
                 old_node = el
                 root.remove(el)
 
@@ -243,22 +243,23 @@ class SvgProcessor:
         if old_node is not None:
             if 'transform' in old_node.attrib:
                 node.attrib['transform'] = old_node.attrib['transform']
+            if 'style' in old_node.attrib:
+                self.apply_style(node, old_node.attrib['style'])
 
         root.append(node)
 
-    def apply_style(self, node, txt):
-        style_txt = txt.attrib['style']
+    def apply_style(self, node, style):
         # TODO: strip spaces from style string before splitting
-        properties = dict([item.split(":") for item in style_txt.split(";") if item])
-        style_render = ""
+        # properties = dict([item.split(":") for item in style.split(";") if item])
+        # style_render = ""
 
-        if 'fill' in properties:
-            style_render += "fill:" + properties['fill'] + ';'
+        # if 'fill' in properties:
+        #    style_render += "fill:" + properties['fill'] + ';'
 
-        node.attrib['style'] = style_render
+        node.attrib['style'] = style
         for g in node.findall('.//{%s}g' % SVG_NS):
-            g.attrib['style'] = style_render
-        # TODO: merge with existing style
+            if 'style' in g.attrib:
+                g.attrib.pop('style')
 
         return node
 
@@ -397,9 +398,9 @@ class SvgProcessor:
             log_debug(latex_string)
             rendergroup = lat2svg.render(latex_string, self.options.preamble, self.options.fontsize, self.options.scale)
             rendergroup = self.align_placement(rendergroup, txt)
-            rendergroup = self.apply_style(rendergroup, txt)
+            # rendergroup = self.apply_style(rendergroup, txt)
             self.add_id_prefix(rendergroup, 'lx-' + txt.attrib['id'])
-            self.insert_node(rendergroup, render_layer)
+            self.insert_node(rendergroup, render_layer, 'lx-' + txt.attrib['id'])
 
         self.store_parameters(render_layer)
         return self.docroot
