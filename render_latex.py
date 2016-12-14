@@ -366,7 +366,8 @@ class SvgProcessor:
             log_debug("Using a previous render layer...")
 
         if self.options.newline is True:
-            line_ending = '\\newline\n'
+            #line_ending = '\\newline\n'
+            line_ending = '\\\\\n'
         else:
             line_ending = '\n'
 
@@ -541,7 +542,7 @@ def add_options(parser):
                       help="maximum search depth for grouped text elements")
     parser.add_option("-n", "--newline", dest="newline",
                       action="store_true",
-                      help="insert \newline at every line break")
+                      help="insert \\\\ at every line break")
     parser.add_option("-m", "--math", dest="math",
                       action="store_true",
                       help="encapsulate all text in math mode")

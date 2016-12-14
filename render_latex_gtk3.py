@@ -79,7 +79,7 @@ class Gtk3ParamGui(Gtk.Window):
         grid.attach(self.entryScale, 1, row_count, 1, 1)
 
         row_count += 1
-        grid.attach(Gtk.Label("Add \\newline at every line break"), 0, row_count, 1, 1)
+        grid.attach(Gtk.Label("Add \\\\ at every line break"), 0, row_count, 1, 1)
         self.btnNewline = Gtk.CheckButton()
         self.btnNewline.set_active(options.newline)
         grid.attach(self.btnNewline, 1, row_count, 1, 1)
