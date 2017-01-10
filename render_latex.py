@@ -8,6 +8,7 @@ import platform
 import subprocess
 import tempfile
 import shutil
+import re
 from lxml import etree
 
 
@@ -211,6 +212,27 @@ class SvgProcessor:
         if render_layer is not None:
             self.get_parameters(render_layer)
 
+        # Determine unit conversion scale factor
+        # here we have to find our document units and calculate a conversion
+        # factor to get from pt to the respective document unit.
+        match = re.match(r"^([0-9][0-9.]*)\s*(em|ex|px|pt|pc|cm|mm|in|)$", self.docroot.attrib["width"])
+        user_unit = match.group(2)
+        if not user_unit:
+            user_unit = 'px'
+        svg_width = float(match.group(1))
+        # match = re.match(r"^([0-9][0-9.]*)\s*(em|ex|px|pt|pc|cm|mm|in|)$", self.docroot.attrib["height"])
+        # svg_height = match.group(1)
+
+        # default conversion factors from unit X to px at 90 dpi
+        # Note: Latex output converted to SVG is always in pt
+        units_px = {'px': 1, 'pt': 1.25, 'pc': 15, 'mm': 3.543307, 'cm': 35.43307, 'in': 90}
+
+        if 'viewBox' in self.docroot.attrib:
+            viewbox = self.docroot.attrib['viewBox'].split()
+            self.unit_conversion_factor = units_px['pt'] * (float(viewbox[2]) / (svg_width * units_px[user_unit]))
+        else:
+            self.unit_conversion_factor = units_px['pt'] / units_px[user_unit]
+
         # set defaults if any required option is still None
         if self.options.scale is None:
             self.options.scale = self.defaults.scale
@@ -279,12 +301,6 @@ class SvgProcessor:
         pos_list.sort()
         pos_offset = pos_list[0]
 
-        # unit conversion between Latex output and SVG file
-        # factor 1.25 was determined empirically for pdflatex -> inkscape
-        # 1pt = 1.25px
-        # TODO: apply generic unit conversion
-        unit_conversion_factor = 1.25
-
         for el in node.getiterator():
             if 'x' in el.attrib:
                 el.attrib['x'] = str(float(el.attrib['x']) - pos_offset[0])
@@ -292,7 +308,7 @@ class SvgProcessor:
                 el.attrib['y'] = str(float(el.attrib['y']) - pos_offset[1])
 
         transform = SvgTransformer()
-        transform.scale(unit_conversion_factor)
+        transform.scale(self.unit_conversion_factor)
         transform.translate(aligned_pos[0], aligned_pos[1])
 
         if 'transform' in txt.attrib:
