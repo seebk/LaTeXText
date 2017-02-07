@@ -1,4 +1,4 @@
-#define VERSION="0.0.1"
+#define VERSION="0.0.3"
 #define APP_ID="RenderLatex"
 
 [Setup]
@@ -25,7 +25,7 @@ Source: pdf2svg-windows-master\dist-32bits\*; DestDir: "{app}\share\extensions\p
 Source: site-packages\*; DestDir: "{app}\python\Lib\site-packages"; Flags: recursesubdirs
 
 [Messages]
-SelectDirLabel3=Please choose the folder where Inkscape was installed. Typically this is C:\Program Files\Inkscape
+SelectDirLabel3=Please choose the folder where Inkscape was installed. Typically this is C:\Program Files\Inkscape.
 
 [Code]
 
