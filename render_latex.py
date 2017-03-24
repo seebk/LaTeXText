@@ -2,6 +2,7 @@
 from __future__ import print_function
 
 import sys
+import math
 import os
 import glob
 import platform
@@ -118,6 +119,16 @@ class SvgTransformer:
             coordStr = attrStr[7:-1]
             coordList = list([float(coord) for coord in coordStr.split(",") if coord])
             return coordList, "matrix"
+        elif "rotate" in attrStr:
+            coordStr = attrStr[8:-1]
+            coordList = list([float(coord) for coord in coordStr.split(",") if coord])
+            return coordList, "rotate"
+        elif "scale" in attrStr:
+            coordStr = attrStr[6:-1]
+            coordList = list([float(coord) for coord in coordStr.split(",") if coord])
+            if len(coordList) == 1:
+                coordList.append(coordList[0])
+            return coordList, "scale"
         else:
             return None, None
 
@@ -146,6 +157,22 @@ class SvgTransformer:
             new_matrix[1][1] = coordList[3]
             new_matrix[0][2] = coordList[4]
             new_matrix[1][2] = coordList[5]
+            self.matrix = self._matmult(new_matrix, self.matrix)
+        elif transform_type == "rotate":
+            log_debug(coordList)
+            new_matrix = self._init_matrix()
+            log_debug(new_matrix)
+            new_matrix[0][0] = math.cos(math.radians(coordList[0]))
+            new_matrix[1][0] = math.sin(-1.0 * math.radians(coordList[0]))
+            new_matrix[0][1] = math.sin(math.radians(coordList[0]))
+            new_matrix[1][1] = math.cos(math.radians(coordList[0]))
+            self.matrix = self._matmult(new_matrix, self.matrix)
+        elif transform_type == "scale":
+            log_debug(coordList)
+            new_matrix = self._init_matrix()
+            log_debug(new_matrix)
+            new_matrix[0][0] = coordList[0]
+            new_matrix[1][1] = coordList[1]
             self.matrix = self._matmult(new_matrix, self.matrix)
         else:
             log_error("\nUnknown transform: " + attrStr)
