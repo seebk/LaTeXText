@@ -325,6 +325,10 @@ class SvgProcessor:
                 el_pos = (float(el.attrib['x']), float(el.attrib['y']))
                 pos_list.append(el_pos)
 
+	if not pos_list:
+                log_debug("Warning: Element has no x/y position assigned!")
+                return node
+
         pos_list.sort()
         pos_offset = pos_list[0]
 
