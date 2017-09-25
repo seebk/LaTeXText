@@ -79,6 +79,12 @@ class Gtk3ParamGui(Gtk.Window):
         grid.attach(self.entryScale, 1, row_count, 1, 1)
 
         row_count += 1
+        self.entryDepth = Gtk.SpinButton.new_with_range(0, 100, 1)
+        self.entryDepth.set_value(options.depth)
+        grid.attach(Gtk.Label("SVG/XML tree max. depth"), 0, row_count, 1, 1)
+        grid.attach(self.entryDepth, 1, row_count, 1, 1)
+
+        row_count += 1
         grid.attach(Gtk.Label("Add \\\\ at every line break"), 0, row_count, 1, 1)
         self.btnNewline = Gtk.CheckButton()
         self.btnNewline.set_active(options.newline)
@@ -132,6 +138,7 @@ class Gtk3ParamGui(Gtk.Window):
     def on_btnApply_clicked(self, widget):
         # get parameters
         self.options.scale = self.entryScale.get_value()
+        self.options.depth = self.entryDepth.get_value()
         self.options.fontsize = self.entryFontsize.get_value()
         self.options.preamble = self.entryPreamble.get_text()
         self.options.math = self.btnMath.get_active()

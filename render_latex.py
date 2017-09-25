@@ -224,7 +224,7 @@ class SvgProcessor:
         self.options = options
         self.svg_input = infile
 
-        self.defaults = dict2obj({"scale": 1.0, "fontsize": 10, "preamble": "",
+        self.defaults = dict2obj({"scale": 1.0, "depth": 0.0, "fontsize": 10, "preamble": "",
                                   "math": False, "newline": False})
 
         # load from file or use existing document root
@@ -263,6 +263,8 @@ class SvgProcessor:
         # set defaults if any required option is still None
         if self.options.scale is None:
             self.options.scale = self.defaults.scale
+        if self.options.depth is None:
+            self.options.depth = self.defaults.depth
         if self.options.fontsize is None:
             self.options.fontsize = self.defaults.fontsize
         if self.options.preamble is None:
@@ -366,6 +368,10 @@ class SvgProcessor:
         if self.options.scale is None and scale is not None:
             self.options.scale = float(scale)
 
+        depth = render_layer.attrib.get('{%s}depth' % RENDLTX_NS, None)
+        if self.options.depth is None and scale is not None:
+            self.options.depth = float(depth)
+
         fontsize = render_layer.attrib.get('{%s}fontsize' % RENDLTX_NS, None)
         if self.options.fontsize is None and fontsize is not None:
             self.options.fontsize = round(float(fontsize))
@@ -387,6 +393,9 @@ class SvgProcessor:
 
         if self.options.scale is not None:
             render_layer.attrib['{%s}scale' % RENDLTX_NS] = str(self.options.scale)
+
+        if self.options.depth is not None:
+            render_layer.attrib['{%s}depth' % RENDLTX_NS] = str(self.options.depth)
 
         if self.options.fontsize is not None:
             render_layer.attrib['{%s}fontsize' % RENDLTX_NS] = str(self.options.fontsize)
