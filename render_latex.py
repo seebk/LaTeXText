@@ -178,19 +178,22 @@ class SvgTransformer:
             log_error("\nUnknown transform: " + attrStr)
             raise RuntimeError()
 
-    # scaling
+    # apply scaling
     def scale(self, factor):
         new_matrix = self._init_matrix()
         new_matrix[0][0] = factor
         new_matrix[1][1] = factor
         self.matrix = self._matmult(new_matrix, self.matrix)
 
-    # translate
+    # apply translation
     def translate(self, x, y):
         new_matrix = self._init_matrix()
         new_matrix[0][2] = x
         new_matrix[1][2] = y
         self.matrix = self._matmult(new_matrix, self.matrix)
+
+    def get_translation(self):
+        return (self.matrix[0][2], self.matrix[1][2])
 
     # return current transformation as SVG transform matrix string
     def to_string(self):
@@ -335,6 +338,11 @@ class SvgProcessor:
         pos_offset = pos_list[0]
 
         for el in node.getiterator():
+            if 'transform' in el.attrib:
+                t = SvgTransformer(el.attrib['transform'])
+                (tx, ty) = t.get_translation()
+                t.translate(-pos_offset[0], -pos_offset[1])
+                el.attrib['transform'] = t.to_string()
             if 'x' in el.attrib:
                 el.attrib['x'] = str(float(el.attrib['x']) - pos_offset[0])
             if 'y' in el.attrib:
