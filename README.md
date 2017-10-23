@@ -80,6 +80,8 @@ instructions.
 
 ### Inkscape extension
 
+![Step-by-step animation](https://media.giphy.com/media/3ov9jG1BQAWY9LAOHu/source.gif)
+
 General instructions:
 
   * Put all text elements on a separate layer.
