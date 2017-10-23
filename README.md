@@ -133,6 +133,7 @@ Some of the code is based on the [textext](https://pav.iki.fi/software/textext/)
 extension. Unfortunately, it is not maintained anymore which was the reason why
 I started to work on this extension.
 
-# Licence
+# License
 
-GPLv3
+This software is licensed under the GPLv3 license. A copy of the license can
+be found in `LICENSE.txt`
