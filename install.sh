@@ -29,13 +29,13 @@ fi
 
 echo -n "Copying extension to ~/.config/inkscape/extensions/ ... "
 
-cp latextext.py ~/.config/inkscape/extensions/
+cp extension/latextext.py ~/.config/inkscape/extensions/
     
 if [ "$GTK3" = true ]; then
-    cp latextext_gtk3.py ~/.config/inkscape/extensions/
-    cp latextext_gtk3.inx ~/.config/inkscape/extensions/
+    cp extension/latextext_gtk3.py ~/.config/inkscape/extensions/
+    cp extension/latextext_gtk3.inx ~/.config/inkscape/extensions/
 else
-    cp latextext.inx ~/.config/inkscape/extensions/
+    cp extension/latextext.inx ~/.config/inkscape/extensions/
 fi
 
 echo "done"

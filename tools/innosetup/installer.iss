@@ -17,10 +17,10 @@ PrivilegesRequired=admin
 OutputDir=.
 
 [Files]
-Source: ..\..\latextext.py; DestDir: "{app}\share\extensions"
-Source: ..\..\latextext.inx; DestDir: "{app}\share\extensions"
-Source: ..\..\latextext_gtk3.py; DestDir: "{app}\share\extensions"
-Source: ..\..\latextext_gtk3.inx; DestDir: "{app}\share\extensions"
+Source: ..\..\extension\latextext.py; DestDir: "{app}\share\extensions"
+Source: ..\..\extension\latextext.inx; DestDir: "{app}\share\extensions"
+Source: ..\..\extension\latextext_gtk3.py; DestDir: "{app}\share\extensions"
+Source: ..\..\extension\latextext_gtk3.inx; DestDir: "{app}\share\extensions"
 Source: pdf2svg-windows-master\dist-32bits\*; DestDir: "{app}\share\extensions\pdf2svg"
 Source: site-packages\*; DestDir: "{app}\python\Lib\site-packages"; Flags: recursesubdirs
 
