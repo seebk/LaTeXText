@@ -95,13 +95,37 @@ General instructions:
   * If you changed your Latex code or added new text elements, simply re-run
   the extension and it will update the render layer.
 
-See the `demo/demo.svg` file to get a full example.
-
-There will be two different entries in the Inkscape extension menu: a standard 
+__NOTE:__ There may be two different entries in the Inkscape extension menu: a standard 
 Inkscape extension and a 'GTK3' GUI variant. The latter is the recommended one 
 as it can remember and restore previous settings per document and has a more 
 comfortable UI. The other extension is only there to be used as a fallback if 
 GTK3 is not available.
+
+#### Options ####
+
+  * _Preamble File_ -- A Latex preamble file to load and configure additional 
+    packages. The `\documentclass` and `\begin{document}` should not be included,
+    see the `preambles/` subfolder for examples.
+
+  * _Document base font size_ -- The main font size for each text element. This 
+    will correspond to the font size otherwise defined in the `\documentclass`
+    statement of a Latex document. Relative font size changes can be set in the
+    text with the standard Latex commands (`\small`, `\tiny`, `\Large`, ...).
+
+  * _Scale factor_ -- An additional scaling applied to each rendered element.
+
+  * _SVG/XML tree max. depth_ -- Some imported graphics may have deeply nested
+    text elements we do not want to render. If this option is greater than zero
+    text elements above the given depth will be ignored.
+    
+  * _Add `\\` at every line break_ -- Automatically replace each line break in a
+    text element by a Latex line break (`\\`)
+    
+  * _Encapsulate all text with $..$_ -- Put all text in math mode by default.
+  
+  * _Show log messages_ -- Show log messages for debugging purpose (if there is
+    any Latex error the log will be shown anyway)
+
 
 ### Commandline mode
 
