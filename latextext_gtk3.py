@@ -20,7 +20,7 @@ except ImportError:
     print("GTK3 variant has to be run as an Inkscape extension!")
     raise
 
-from render_latex import RenderLatexEffect, SvgProcessor, set_log_level, log_level_debug
+from latextext import RenderLatexEffect, SvgProcessor, set_log_level, log_level_debug
 
 
 ######################
@@ -31,7 +31,7 @@ class Gtk3ParamGui(Gtk.Window):
 
     def __init__(self, run_callback):
         self.run_callback = run_callback
-        Gtk.Window.__init__(self, title="Render Latex Layer (GTK3)")
+        Gtk.Window.__init__(self, title="LaTexText (GTK3)")
         gh = Gdk.Geometry()
         gh.max_height = 120
         gh.max_width = 700

@@ -377,7 +377,7 @@ class SvgProcessor:
             self.options.scale = float(scale)
 
         depth = render_layer.attrib.get('{%s}depth' % RENDLTX_NS, None)
-        if self.options.depth is None and scale is not None:
+        if self.options.depth is None and depth is not None:
             self.options.depth = float(depth)
 
         fontsize = render_layer.attrib.get('{%s}fontsize' % RENDLTX_NS, None)

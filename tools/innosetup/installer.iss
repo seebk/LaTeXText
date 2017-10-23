@@ -1,10 +1,10 @@
-#define VERSION="0.0.3"
-#define APP_ID="RenderLatex"
+#define VERSION="0.1.0"
+#define APP_ID="LaTexText"
 
 [Setup]
-AppName=Render Latex Inkscape extension
+AppName=LaTexText Inkscape extension
 AppId={#APP_ID}
-AppVerName=Render Latex Inkscape extension {#VERSION}
+AppVerName=LaTexText Inkscape extension {#VERSION}
 AppVersion={#VERSION}
 VersionInfoVersion={#VERSION}
 OutputBaseFilename={#APP_ID}-{#VERSION}
@@ -17,10 +17,10 @@ PrivilegesRequired=admin
 OutputDir=.
 
 [Files]
-Source: ..\..\render_latex.py; DestDir: "{app}\share\extensions"
-Source: ..\..\render_latex.inx; DestDir: "{app}\share\extensions"
-Source: ..\..\render_latex_gtk3.py; DestDir: "{app}\share\extensions"
-Source: ..\..\render_latex_gtk3.inx; DestDir: "{app}\share\extensions"
+Source: ..\..\latextext.py; DestDir: "{app}\share\extensions"
+Source: ..\..\latextext.inx; DestDir: "{app}\share\extensions"
+Source: ..\..\latextext_gtk3.py; DestDir: "{app}\share\extensions"
+Source: ..\..\latextext_gtk3.inx; DestDir: "{app}\share\extensions"
 Source: pdf2svg-windows-master\dist-32bits\*; DestDir: "{app}\share\extensions\pdf2svg"
 Source: site-packages\*; DestDir: "{app}\python\Lib\site-packages"; Flags: recursesubdirs
 

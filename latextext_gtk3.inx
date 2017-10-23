@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
-	<name>Render Latex Layer (GTK3)</name>
-	<id>org.inkscape.render.latex_layer_gtk3</id>
-	<dependency type="executable" location="extensions">render_latex.py</dependency>
-	<dependency type="executable" location="extensions">render_latex_gtk3.py</dependency>
+	<name>Text with Latex (GTK3)</name>
+	<id>org.inkscape.render.latextext_gtk3</id>
+	<dependency type="executable" location="extensions">latextext.py</dependency>
+	<dependency type="executable" location="extensions">latextext_gtk3.py</dependency>
     <dependency type="executable" location="extensions">inkex.py</dependency>
 	<effect>
 		<object-type>all</object-type>
@@ -12,6 +12,6 @@
 		</effects-menu>
 	</effect>
 	<script>
-		<command reldir="extensions" interpreter="python">render_latex_gtk3.py</command>
+		<command reldir="extensions" interpreter="python">latextext_gtk3.py</command>
 	</script>
 </inkscape-extension>

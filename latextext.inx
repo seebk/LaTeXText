@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
-	<name>Render Latex Layer</name>
-	<id>org.inkscape.render.latex_layer</id>
-	<dependency type="executable" location="extensions">render_latex.py</dependency>
+	<name>Text with Latex</name>
+	<id>org.inkscape.render.latextext</id>
+	<dependency type="executable" location="extensions">latextext.py</dependency>
     <dependency type="executable" location="extensions">inkex.py</dependency>
 	<param name="preamble" type="string" gui-text="Preamble"></param>
 	<param name="depth" type="int" min="0" max="100" gui-text="SVG/XML tree max. depth">0</param>
@@ -18,6 +18,6 @@
 		</effects-menu>
 	</effect>
 	<script>
-		<command reldir="extensions" interpreter="python">render_latex.py</command>
+		<command reldir="extensions" interpreter="python">latextext.py</command>
 	</script>
 </inkscape-extension>

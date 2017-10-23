@@ -1,15 +1,7 @@
 #!/bin/bash
 
 DEPENDENCIES=true
-
-echo -n "Check if PyGObject is available... "
-python -c "import gi" 2> /dev/null
-if [ $? -ne 0 ]; then
-    echo "NOT FOUND"
-    DEPENDENCIES=false
-else
-    echo "OK"
-fi
+GTK3=false
 
 echo -n "Check if Python LXML is available... "
 python -c "import lxml" 2> /dev/null
@@ -25,11 +17,25 @@ if [ "$DEPENDENCIES" = false ]; then
     exit
 fi
 
+echo -n "Check if PyGObject is available... "
+python -c "import gi" 2> /dev/null
+if [ $? -ne 0 ]; then
+    echo "NOT FOUND, installing standard extension GUI"
+    GTK3=false
+else
+    GTK3=true
+    echo "OK"
+fi
+
 echo -n "Copying extension to ~/.config/inkscape/extensions/ ... "
 
-cp render_latex.py ~/.config/inkscape/extensions/
-cp render_latex_gtk3.py ~/.config/inkscape/extensions/
-cp render_latex.inx ~/.config/inkscape/extensions/
-cp render_latex_gtk3.inx ~/.config/inkscape/extensions/
+cp latextext.py ~/.config/inkscape/extensions/
+    
+if [ "$GTK3" = true ]; then
+    cp latextext_gtk3.py ~/.config/inkscape/extensions/
+    cp latextext_gtk3.inx ~/.config/inkscape/extensions/
+else
+    cp latextext.inx ~/.config/inkscape/extensions/
+fi
 
 echo "done"
