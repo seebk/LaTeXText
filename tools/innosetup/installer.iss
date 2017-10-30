@@ -21,8 +21,12 @@ Source: ..\..\extension\latextext.py; DestDir: "{app}\share\extensions"
 Source: ..\..\extension\latextext.inx; DestDir: "{app}\share\extensions"
 Source: ..\..\extension\latextext_gtk3.py; DestDir: "{app}\share\extensions"
 Source: ..\..\extension\latextext_gtk3.inx; DestDir: "{app}\share\extensions"
+
 Source: pdf2svg-windows-master\dist-32bits\*; DestDir: "{app}\share\extensions\pdf2svg"
-Source: site-packages\*; DestDir: "{app}\python\Lib\site-packages"; Flags: recursesubdirs
+
+Source: pygobject\mingw64\lib\python2.7\site-packages\*; DestDir: "{app}\lib\python2.7\site-packages"; Flags: recursesubdirs
+Source: pygobject\mingw64\bin\*.dll; DestDir: "{app}";
+Source: pygobject\mingw64\lib\girepository-1.0\*.typelib; DestDir: "{app}\lib\girepository-1.0"
 
 [Messages]
 SelectDirLabel3=Please choose the folder where Inkscape was installed. Typically this is C:\Program Files\Inkscape.
@@ -35,8 +39,11 @@ var
   sPath: String;
 begin
   sPath := '';
-  if not RegQueryStringValue(HKLM,'Software\Classes\inkscape.svg\DefaultIcon', '', sPath) then
-    sPath := '{pf}\Inkscape';
+  if DirExists(ExpandConstant('{pf}\Inkscape\')) then 
+    sPath := ExpandConstant('{pf}\Inkscape\');
+  if DirExists(ExpandConstant('{pf64}\Inkscape\')) then 
+    sPath := ExpandConstant('{pf64}\Inkscape\');
+  (* TODO: find path from registry... *)
   Result := ExtractFilePath(RemoveQuotes(sPath));
 end;
 
@@ -61,8 +68,6 @@ var
   msg: String;
   resultcode: Integer;
 begin
-  while true do
-  begin
     sPrevID := '{#APP_ID}';
     sPrevPath := GetPathInstalled( sprevID );
     msg := 'A previous version of ' + sPrevID + ' is already installed. ' +
@@ -78,19 +83,16 @@ begin
       else
       begin
         Result := false;
-        exit;
       end;
     end
     else
     begin
       Result := true;
-      exit;
     end;
-  end;
 end;
  
 function InitializeSetup(): Boolean;
 begin
   Result := checkForOldVersion();
-  if (not Result) then exit;
+  Result := true;
 end;

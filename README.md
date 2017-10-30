@@ -1,13 +1,13 @@
 # Introduction
 
 This Inkscape extension searches all text elements in a document and renders
-them with PdfLatex. The rendered text will appear at the same position as the 
+them with PdfLatex. The rendered text will appear at the same position as the
 original text and may contain Latex commands and math formula. Modifications
 of the source text will be considered when the extension is executed again.
 
 As the rendered text is added to a new layer, the original document content
-is not touched and you can always wipe out all modifications from this extension 
-by simply deleting the created layer. 
+is not touched and you can always wipe out all modifications from this extension
+by simply deleting the created layer.
 
 # Installation
 
@@ -28,12 +28,14 @@ folder in the current user home directory (`~/.config/inkscape/extensions/`).
 
 Required Software:
 
-   * Inkscape (version >= 0.91)
+   * Inkscape (version >= 0.92.2)
    * MiKTeX 2.9
 
-Simply download the installer package and run it. It will occupy
-quite a lot of disk space (~100 MB) as it has to install some missing Python
-modules as well as required libraries and tools (pdf2svg, PyGObject, GTK3, ...).
+Simply download the installer package from the
+[latest release](https://github.com/seebk/LaTeXText/releases) and run it.
+
+__NOTE:__ You need at least Inkscape 0.92.2. Prior versions used a different
+build environment on Windows and are not compatible with this extension.
 
 ### Mac OS X
 
@@ -86,7 +88,7 @@ General instructions:
 
   * Put all text elements on a separate layer.
 
-  * Run 'Extensions -> Render -> Text with Latex (GTK3)'. It will create a new 
+  * Run 'Extensions -> Render -> Text with Latex (GTK3)'. It will create a new
   layer with all text elements being rendered by `pdflatex`.
 
   * Switch visibility of the layers to either see the Latex code or to see the
@@ -95,19 +97,19 @@ General instructions:
   * If you changed your Latex code or added new text elements, simply re-run
   the extension and it will update the render layer.
 
-__NOTE:__ There may be two different entries in the Inkscape extension menu: a standard 
-Inkscape extension and a 'GTK3' GUI variant. The latter is the recommended one 
-as it can remember and restore previous settings per document and has a more 
-comfortable UI. The other extension is only there to be used as a fallback if 
+__NOTE:__ There may be two different entries in the Inkscape extension menu: a standard
+Inkscape extension and a 'GTK3' GUI variant. The latter is the recommended one
+as it can remember and restore previous settings per document and has a more
+comfortable UI. The other extension is only there to be used as a fallback if
 GTK3 is not available.
 
 #### Options ####
 
-  * _Preamble File_ -- A Latex preamble file to load and configure additional 
+  * _Preamble File_ -- A Latex preamble file to load and configure additional
     packages. The `\documentclass` and `\begin{document}` should not be included,
     see the `preambles/` subfolder for examples.
 
-  * _Document base font size_ -- The main font size for each text element. This 
+  * _Document base font size_ -- The main font size for each text element. This
     will correspond to the font size otherwise defined in the `\documentclass`
     statement of a Latex document. Relative font size changes can be set in the
     text with the standard Latex commands (`\small`, `\tiny`, `\Large`, ...).
@@ -117,12 +119,12 @@ GTK3 is not available.
   * _SVG/XML tree max. depth_ -- Some imported graphics may have deeply nested
     text elements we do not want to render. If this option is greater than zero
     text elements above the given depth will be ignored.
-    
+
   * _Add `\\` at every line break_ -- Automatically replace each line break in a
     text element by a Latex line break (`\\`)
-    
+
   * _Encapsulate all text with $..$_ -- Put all text in math mode by default.
-  
+
   * _Show log messages_ -- Show log messages for debugging purpose (if there is
     any Latex error the log will be shown anyway)
 

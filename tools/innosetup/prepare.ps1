@@ -1,22 +1,32 @@
 
 # download ressources
-$client = new-object System.Net.WebClient
+$msys2_repo= "http://repo.msys2.org/mingw/x86_64/"
 
-If (-Not (Test-Path "pygi.7z")){
-    $client.DownloadFile("http://downloads.sourceforge.net/project/pygobjectwin32/pygi-aio-3.4.2_rev11.7z", "pygi.7z")
+$client = new-object System.Net.WebClient
+$zipExe = join-path ${env:ProgramFiles(x86)} '7-zip\7z.exe'
+
+function get_msys2_package($pkg){
+
+    If (-Not (Test-Path "$pkg")){
+        $client.DownloadFile("$msys2_repo/$pkg", $pkg)
+    }
+    &$zipExe x $pkg -y
+    &$zipExe x $pkg.Substring(0,$pkg.Length-3) -y -opygobject
+    Remove-Item $pkg.Substring(0,$pkg.Length-3)
 }
 
+get_msys2_package("mingw-w64-x86_64-atk-2.24.0-1-any.pkg.tar.xz")
+get_msys2_package("mingw-w64-x86_64-cairo-1.15.4-4-any.pkg.tar.xz")
+get_msys2_package("mingw-w64-x86_64-gdk-pixbuf2-2.36.6-2-any.pkg.tar.xz")
+get_msys2_package("mingw-w64-x86_64-gobject-introspection-runtime-1.52.0-0-any.pkg.tar.xz")
+get_msys2_package("mingw-w64-x86_64-gtk3-3.22.15-1-any.pkg.tar.xz")
+get_msys2_package("mingw-w64-x86_64-libepoxy-1.4.2-1-any.pkg.tar.xz")
+get_msys2_package("mingw-w64-x86_64-pango-1.40.6-1-any.pkg.tar.xz")
+get_msys2_package("mingw-w64-x86_64-python2-cairo-1.13.3-2-any.pkg.tar.xz")
+get_msys2_package("mingw-w64-x86_64-python2-gobject-3.24.1-1-any.pkg.tar.xz")
+
+# pdf2svg
 If (-Not (Test-Path "pdf2svg.zip")){
     $client.DownloadFile("https://github.com/jalios/pdf2svg-windows/archive/master.zip", "pdf2svg.zip")
 }
-
-
-# unpack
-$zipExe = join-path ${env:ProgramFiles(x86)} '7-zip\7z.exe'
-&$zipExe x pygi.7z -y "-opygi"
 Expand-Archive pdf2svg.zip -dest .
-
-# prepare python packages
-mkdir site-packages
-robocopy /e pygi/py26 site-packages
-robocopy /e pygi/gtk site-packages/gtk /XD "locale" "poppler" "webkitgtk-3.0" "gstreamer-1.0" "babl-0.1" "gegl-0.2" "gtk-doc" "gedit" /XF "libpoppler-34.dll" "libtelepathy-glib-0.dll" "libwebkitgtk-3.0-0.dll" "libgexiv2-1.dll"
