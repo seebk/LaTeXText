@@ -436,8 +436,8 @@ class SvgProcessor:
         else:
             line_ending = '\n'
 
-		text_nodes = self.docroot.findall('.//{%s}text' % SVG_NS)
-		log_debug(str(len(text_nodes)) + " text nodes were found.")
+        text_nodes = self.docroot.findall('.//{%s}text' % SVG_NS)
+        log_debug(str(len(text_nodes)) + " text nodes were found.")
         for txt in text_nodes:
             if self.options.depth > 0 and txt.xpath('count(ancestor::*)') > self.options.depth + 1:
                     continue
