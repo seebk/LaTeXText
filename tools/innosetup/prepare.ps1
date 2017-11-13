@@ -24,6 +24,7 @@ get_msys2_package("mingw-w64-x86_64-libepoxy-1.4.2-1-any.pkg.tar.xz")
 get_msys2_package("mingw-w64-x86_64-pango-1.40.6-1-any.pkg.tar.xz")
 get_msys2_package("mingw-w64-x86_64-python2-cairo-1.13.3-2-any.pkg.tar.xz")
 get_msys2_package("mingw-w64-x86_64-python2-gobject-3.24.1-1-any.pkg.tar.xz")
+get_msys2_package("mingw-w64-x86_64-adwaita-icon-theme-3.24.0-1-any.pkg.tar.xz")
 
 # pdf2svg
 If (-Not (Test-Path "pdf2svg.zip")){
