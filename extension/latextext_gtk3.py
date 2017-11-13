@@ -125,7 +125,8 @@ class Gtk3ParamGui(Gtk.Window):
                                        Gtk.FileChooserAction.OPEN,
                                        (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
                                         Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
-
+        dialog.set_keep_above(True)
+        dialog.set_modal(True)
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
             self.entryPreamble.set_text(dialog.get_filename())
