@@ -159,8 +159,7 @@ You can directly run the extension in the commandline outside of Inkscape, too.
 # Credits
 
 Some of the code is based on the [textext](https://pav.iki.fi/software/textext/)
-extension. Unfortunately, it is not maintained anymore which was the reason why
-I started to work on this extension.
+extension from Pauli Virtanen. 
 
 # License
 
