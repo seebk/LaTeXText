@@ -227,8 +227,9 @@ class SvgProcessor:
         self.options = options
         self.svg_input = infile
 
-        self.defaults = dict2obj({"scale": 1.0, "depth": 0.0, "fontsize": 10, "preamble": "",
-                                  "math": False, "newline": False})
+        self.defaults = dict2obj({"scale": 1.0, "depth": 0.0, "fontsize": 10, 
+                                  "preamble": "","packages": "amsmath,amssymb","math": False, 
+                                  "newline": False})
 
         # load from file or use existing document root
         if isinstance(infile, str):
@@ -272,6 +273,8 @@ class SvgProcessor:
             self.options.fontsize = self.defaults.fontsize
         if self.options.preamble is None:
             self.options.preamble = self.defaults.preamble
+        if self.options.packages is None:
+            self.options.packages = self.defaults.packages
         if self.options.math is None:
             self.options.math = self.defaults.math
         if self.options.newline is None:
@@ -372,6 +375,10 @@ class SvgProcessor:
         if self.options.preamble is None and preamble_path:
             self.options.preamble = preamble_path
 
+        package_list = render_layer.attrib.get('{%s}packages' % RENDLTX_NS, "")
+        if self.options.packages is None:
+            self.options.packages = package_list
+
         scale = render_layer.attrib.get('{%s}scale' % RENDLTX_NS, None)
         if self.options.scale is None and scale is not None:
             self.options.scale = float(scale)
@@ -398,6 +405,9 @@ class SvgProcessor:
 
         if self.options.preamble is not None:
             render_layer.attrib['{%s}preamble' % RENDLTX_NS] = self.options.preamble
+
+        if self.options.packages is not None:
+            render_layer.attrib['{%s}packages' % RENDLTX_NS] = self.options.packages
 
         if self.options.scale is not None:
             render_layer.attrib['{%s}scale' % RENDLTX_NS] = str(self.options.scale)
@@ -462,7 +472,7 @@ class SvgProcessor:
             if self.options.math and latex_string[0] is not '$':
                 latex_string = '$' + latex_string + '$'
             log_debug(latex_string)
-            rendergroup = lat2svg.render(latex_string, self.options.preamble, self.options.fontsize, self.options.scale)
+            rendergroup = lat2svg.render(latex_string, self.options.preamble, self.options.packages, self.options.fontsize, self.options.scale)
             rendergroup = self.align_placement(rendergroup, txt)
             # rendergroup = self.apply_style(rendergroup, txt)
             self.add_id_prefix(rendergroup, 'lx-' + txt.attrib['id'])
@@ -508,7 +518,7 @@ class Latex2SvgRenderer:
         return out + err
 
     # render given latex code and return the result as an SVG group element
-    def render(self, latex_code, preamble_file=None, fontsize=10, scale=1):
+    def render(self, latex_code, preamble_file=None, package_list="", fontsize=10, scale=1):
 
         # Options pass to LaTeX-related commands
         latexOpts = ['-interaction=nonstopmode',
@@ -533,12 +543,13 @@ r"""\documentclass[%dpt]{%s}
 \setlength{\parindent}{0pt}
 \renewcommand{\indent}{\hspace*{\tindent}}
 %s
+\usepackage{%s}
 \pagestyle{empty}
 \AtBeginDocument{\pdfliteral { %s 0 0 %s 0 0 cm }}
 \begin{document}
     %s
 \end{document}""" \
-        % (fontsize, doc_class, preamble, scale, scale, latex_code)
+        % (fontsize, doc_class, preamble, package_list, scale, scale, latex_code)
 
         # Convert TeX to PDF
 
@@ -601,6 +612,8 @@ def add_options(parser):
                       help="write to output file or directory", metavar="FILE")
     parser.add_option("-p", "--preamble", dest="preamble",
                       help="latex preamble file", metavar="FILE")
+    parser.add_option("-k", "--packages", dest="packages",
+                     help="comma separated list of additional latex packages to be loaded", metavar="LIST")
     parser.add_option("-f", "--fontsize", dest="fontsize", type="int",
                       help="latex base font size")
     parser.add_option("-s", "--scale", dest="scale", type="float",

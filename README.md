@@ -108,6 +108,9 @@ GTK3 is not available.
   * _Preamble File_ -- A Latex preamble file to load and configure additional
     packages. The `\documentclass` and `\begin{document}` should not be included,
     see the `preambles/` subfolder for examples.
+    
+  * _Additional Packages_ -- A comma separated list of additional Latex packages 
+    that should be loaded.
 
   * _Document base font size_ -- The main font size for each text element. This
     will correspond to the font size otherwise defined in the `\documentclass`

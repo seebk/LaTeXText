@@ -65,6 +65,13 @@ class Gtk3ParamGui(Gtk.Window):
         grid.attach(box0, 1, row_count, 1, 1)
 
         row_count += 1
+        grid.attach(Gtk.Label("Additional Packages"), 0, row_count, 1, 1)
+        self.entryPackages = Gtk.Entry()
+        self.entryPackages.set_text(options.packages)
+        self.entryPackages.set_hexpand(True)
+        grid.attach(self.entryPackages, 1, row_count, 1, 1)
+
+        row_count += 1
         grid.attach(Gtk.Label("Document base font size"), 0, row_count, 1, 1)
         self.entryFontsize = Gtk.SpinButton.new_with_range(1, 32, 1)
         self.entryFontsize.set_value(options.fontsize)
@@ -142,6 +149,7 @@ class Gtk3ParamGui(Gtk.Window):
         self.options.depth = self.entryDepth.get_value()
         self.options.fontsize = self.entryFontsize.get_value()
         self.options.preamble = self.entryPreamble.get_text()
+        self.options.packages = self.entryPackages.get_text()
         self.options.math = self.btnMath.get_active()
         self.options.newline = self.btnNewline.get_active()
         if self.btnShowLog.get_active() is True:
