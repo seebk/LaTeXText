@@ -228,8 +228,8 @@ class SvgProcessor:
         self.svg_input = infile
 
         self.defaults = dict2obj({"scale": 1.0, "depth": 0.0, "fontsize": 10, 
-                                  "preamble": "","packages": "amsmath,amssymb","math": False, 
-                                  "newline": False})
+                                  "preamble": "", "packages": "amsmath,amssymb", "math": False,
+                                  "newline": False, "active_layer": "all"})
 
         # load from file or use existing document root
         if isinstance(infile, str):
@@ -279,6 +279,10 @@ class SvgProcessor:
             self.options.math = self.defaults.math
         if self.options.newline is None:
             self.options.newline = self.defaults.newline
+        if self.options.active_layer is None:
+            self.options.active_layer = self.defaults.active_layer
+
+        self.options.layers = self.get_layers()
 
     def add_id_prefix(self, node, prefix):
         for el in node.xpath('//*[attribute::id]', namespaces=NSS):
@@ -399,6 +403,10 @@ class SvgProcessor:
         if self.options.math is None and math is not None:
             self.options.math = math in ('True', 'true')
 
+        active_layer = render_layer.attrib.get('{%s}active_layer' % RENDLTX_NS, None)
+        if self.options.active_layer is None and active_layer is not None:
+            self.options.active_layer = active_layer
+
     def store_parameters(self, render_layer):
         if render_layer is None:
             return
@@ -424,6 +432,19 @@ class SvgProcessor:
         if self.options.math is not None:
             render_layer.attrib['{%s}math' % RENDLTX_NS] = str(self.options.math)
 
+        if self.options.active_layer is not None:
+            render_layer.attrib['{%s}active_layer' % RENDLTX_NS] = str(self.options.active_layer)
+
+    def get_layers(self):
+        log_debug("Collecting layers:")
+        layers = []
+        for layer in self.docroot.findall("{%s}g" % SVG_NS):
+            if layer.attrib['id'] != 'ltx-render-layer':
+                layer_id = layer.attrib['id']
+                layer_name = layer.attrib.get('{%s}label' % INKSCAPE_NS)
+                layers.append((layer_id, layer_name))
+        return layers
+
     def run(self):
 
         lat2svg = Latex2SvgRenderer()
@@ -446,7 +467,13 @@ class SvgProcessor:
         else:
             line_ending = '\n'
 
-        text_nodes = self.docroot.findall('.//{%s}text' % SVG_NS)
+        active_layer = self.options.active_layer
+        log_debug("Selected layer id: " + active_layer)
+        if self.options.active_layer is None or active_layer == "all":
+            text_nodes = self.docroot.findall('.//{%s}text' % SVG_NS)
+        else:
+            text_nodes = self.docroot.findall(".//svg:g[@id='" + active_layer + "']/svg:text", NSS)
+
         log_debug(str(len(text_nodes)) + " text nodes were found.")
         for txt in text_nodes:
             if self.options.depth > 0 and txt.xpath('count(ancestor::*)') > self.options.depth + 1:
@@ -620,6 +647,8 @@ def add_options(parser):
                       help="apply additional scaling")
     parser.add_option("-d", "--depth", dest="depth", type="int",
                       help="maximum search depth for grouped text elements")
+    parser.add_option("-l", "--layer", dest="active_layer", type="string",
+                      help="select text on specified layer id")
     parser.add_option("-n", "--newline", dest="newline",
                       action="store_true",
                       help="insert \\\\ at every line break")

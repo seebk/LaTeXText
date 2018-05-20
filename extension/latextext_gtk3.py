@@ -91,6 +91,25 @@ class Gtk3ParamGui(Gtk.Window):
         grid.attach(Gtk.Label("SVG/XML tree max. depth"), 0, row_count, 1, 1)
         grid.attach(self.entryDepth, 1, row_count, 1, 1)
 
+        layer_list = Gtk.ListStore(str, str)
+        layer_list.append(['All layers','all'])
+        active_index = 0
+        i = 0
+        for layer in self.options.layers:
+            i += 1
+            if self.options.active_layer == layer[0]:
+                active_index = i
+            layer_list.append([layer[1], layer[0]])
+
+        row_count += 1
+        grid.attach(Gtk.Label("Selected layer"), 0, row_count, 1, 1)
+        self.comboLayer = Gtk.ComboBox.new_with_model(layer_list)
+        renderer_text = Gtk.CellRendererText()
+        self.comboLayer.pack_start(renderer_text, True)
+        self.comboLayer.add_attribute(renderer_text, "text", 0)
+        self.comboLayer.set_active(active_index)
+        grid.attach(self.comboLayer, 1, row_count, 1, 1)
+
         row_count += 1
         grid.attach(Gtk.Label("Add \\\\ at every line break"), 0, row_count, 1, 1)
         self.btnNewline = Gtk.CheckButton()
@@ -152,6 +171,7 @@ class Gtk3ParamGui(Gtk.Window):
         self.options.packages = self.entryPackages.get_text()
         self.options.math = self.btnMath.get_active()
         self.options.newline = self.btnNewline.get_active()
+        self.options.active_layer = self.comboLayer.get_model()[self.comboLayer.get_active_iter()][1]
         if self.btnShowLog.get_active() is True:
             set_log_level(log_level_debug)
         try:
