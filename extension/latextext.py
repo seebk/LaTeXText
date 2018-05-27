@@ -446,7 +446,27 @@ class SvgProcessor:
         else:
             line_ending = '\n'
 
-        text_nodes = self.docroot.findall('.//{%s}text' % SVG_NS)
+        # check for an input layer or add one 
+        input_layer = self.docroot.find("{%s}g[@id='ltx-input-layer']" % SVG_NS)
+        if input_layer is None:
+            log_debug("Creating a new input layer...")
+            input_layer = etree.Element('g', nsmap=NSS)
+            input_layer.attrib['{%s}label' % INKSCAPE_NS] = 'Latex Input'
+            input_layer.attrib['{%s}groupmode' % INKSCAPE_NS] = 'layer'
+            input_layer.attrib['id'] = 'ltx-input-layer'
+            self.docroot.append(input_layer)
+        else:
+            log_debug("Using a previous input layer...")
+
+        text_nodes = None
+        input_layer = self.docroot.find("{%s}g[@id='ltx-input-layer']" % SVG_NS)  
+        if input_layer is None:
+            text_nodes = self.docroot.findall('.//{%s}text' % SVG_NS)
+            log_debug("inputlayer is None")
+        else: 
+            text_nodes = input_layer.findall('.//{%s}text' % SVG_NS)
+            log_debug("inputlayer found")
+
         log_debug(str(len(text_nodes)) + " text nodes were found.")
         for txt in text_nodes:
             if self.options.depth > 0 and txt.xpath('count(ancestor::*)') > self.options.depth + 1:
