@@ -25,7 +25,14 @@ Source: ..\..\extension\latextext_gtk3.inx; DestDir: "{app}\share\extensions"
 Source: pdf2svg-windows-master\dist-32bits\*; DestDir: "{app}\share\extensions\pdf2svg"
 
 Source: pygobject\mingw64\lib\python2.7\site-packages\*; DestDir: "{app}\lib\python2.7\site-packages"; Flags: recursesubdirs
-Source: pygobject\mingw64\bin\*.dll; DestDir: "{app}";
+
+Source: pygobject\mingw64\bin\libcairo-gobject-2.dll; DestDir: "{app}";
+Source: pygobject\mingw64\bin\libepoxy-0.dll; DestDir: "{app}";
+Source: pygobject\mingw64\bin\libgdk-3-0.dll; DestDir: "{app}";
+Source: pygobject\mingw64\bin\libgirepository-1.0-1.dll; DestDir: "{app}";
+Source: pygobject\mingw64\bin\libgtk-3-0.dll; DestDir: "{app}";
+Source: pygobject\mingw64\bin\libgtkreftestprivate-0.dll; DestDir: "{app}";
+
 Source: pygobject\mingw64\lib\girepository-1.0\*.typelib; DestDir: "{app}\lib\girepository-1.0"
 Source: pygobject\mingw64\share\glib-2.0\schemas\gschemas.compiled; DestDir: "{app}\share\glib-2.0\schemas"
 Source: pygobject\mingw64\share\icons\Adwaita\*; DestDir: "{app}\share\icons\Adwaita"; Flags: recursesubdirs
