@@ -15,14 +15,18 @@ by simply deleting the created layer.
 
 Required packages on Debian-based distributions:
 
-  * inkscape (version >= 0.91)
-  * texlive-base (pdflatex, ...)
-  * pdf2svg
-  * python and python-lxml (Python version < 3.0)
-  * python-gi, the PyGObject bindings for the GTK3 GUI variant
+  * `inkscape` (version >= 0.91)
+  * `texlive-base` (provides pdflatex, ...)
+  * `pdf2svg`
+  * `python` and `python-lxml` (Python version < 3.0)
+  * `python-gi`, the PyGObject bindings for the GTK3 GUI variant
 
-Run the `install.sh` script to copy the extension into the Inkscape extension
-folder in the current user home directory (`~/.config/inkscape/extensions/`).
+In other distributions the packages may be named differently, e.g the PyGObject 
+bindings on OpenSuse are in the `python2-gobject-Gdk` package.
+
+When the dependencies are installed, just run the `install.sh` script to copy the 
+extension into the Inkscape extension folder in the current user home 
+directory (`~/.config/inkscape/extensions/`).
 
 ### Windows
 
