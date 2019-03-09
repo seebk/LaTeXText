@@ -1,4 +1,4 @@
-#define VERSION="0.1.1"
+#define VERSION="0.1.2"
 #define APP_ID="LaTexText"
 
 [Setup]
@@ -7,7 +7,7 @@ AppId={#APP_ID}
 AppVerName=LaTexText Inkscape extension {#VERSION}
 AppVersion={#VERSION}
 VersionInfoVersion={#VERSION}
-OutputBaseFilename={#APP_ID}-{#VERSION}
+OutputBaseFilename={#APP_ID}-{#VERSION}_win64
 
 DefaultDirName={code:GetInkscapePath}
 DirExistsWarning=no
