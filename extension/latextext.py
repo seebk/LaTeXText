@@ -16,6 +16,7 @@ from lxml import etree
 MAC = "Darwin"
 WINDOWS = "Windows"
 PLATFORM = platform.system()
+PY3 = int(platform.python_version()[0]) >= 3
 
 STANDALONE = False
 LOG_LEVEL = 3
@@ -95,9 +96,7 @@ class SvgTransformer:
 
     # matrix multiplication helper function
     def _matmult(self, a, b):
-        zip_b = zip(*b)
-        # uncomment next line if python 3 :
-        # zip_b = list(zip_b)
+        zip_b = list(zip(*b)) if PY3 else zip(*b)
         return [[sum(ele_a * ele_b for ele_a, ele_b in zip(row_a, col_b))
                  for col_b in zip_b] for row_a in a]
 
@@ -227,8 +226,8 @@ class SvgProcessor:
         self.options = options
         self.svg_input = infile
 
-        self.defaults = dict2obj({"scale": 1.0, "depth": 0.0, "fontsize": 10, 
-                                  "preamble": "","packages": "amsmath,amssymb","math": False, 
+        self.defaults = dict2obj({"scale": 1.0, "depth": 0.0, "fontsize": 10,
+                                  "preamble": "","packages": "amsmath,amssymb","math": False,
                                   "newline": False})
 
         # load from file or use existing document root
@@ -619,21 +618,21 @@ r"""\documentclass[%dpt]{%s}
 # commandline options shared by standalone application and inkscape extension
 def add_arguments(parser):
     parser.add_argument("-o", "--outfile", dest="outfile",
-                      help="write to output file or directory", metavar="FILE")
+                        help="write to output file or directory", metavar="FILE")
     parser.add_argument("-p", "--preamble", dest="preamble",
-                      help="latex preamble file", metavar="FILE")
+                        help="latex preamble file", metavar="FILE")
     parser.add_argument("-k", "--packages", dest="packages",
                         help="comma separated list of additional latex packages to be loaded",
                         metavar="LIST")
     parser.add_argument("-f", "--fontsize", dest="fontsize", type=int,
-                      help="latex base font size")
+                        help="latex base font size")
     parser.add_argument("-s", "--scale", dest="scale", type=float,
-                      help="apply additional scaling")
+                        help="apply additional scaling")
     parser.add_argument("-d", "--depth", dest="depth", type=int,
-                      help="maximum search depth for grouped text elements")
+                        help="maximum search depth for grouped text elements")
     parser.add_argument("-c", "--clean",
-                      action="store_true", dest="clean",
-                      help="remove all renderings")
+                        action="store_true", dest="clean",
+                        help="remove all renderings")
 
 
 if STANDALONE is False:
@@ -671,7 +670,7 @@ else:
                             action="store_true",
                             help="encapsulate all text in math mode")
         parser.add_argument("-v", "--verbose", default=False,
-                          action="store_true", dest="verbose")
+                            action="store_true", dest="verbose")
         parser.add_argument("svg", type=str, nargs='+',
                             metavar="FILE",
                             help="SVGfile(s)")
