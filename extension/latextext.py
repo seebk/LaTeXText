@@ -607,26 +607,21 @@ r"""\documentclass[%dpt]{%s}
 # Init for standalone or Inkscape extension run mode
 
 # commandline options shared by standalone application and inkscape extension
-def add_options(parser):
-    parser.add_option("-o", "--outfile", dest="outfile",
+def add_arguments(parser):
+    parser.add_argument("-o", "--outfile", dest="outfile",
                       help="write to output file or directory", metavar="FILE")
-    parser.add_option("-p", "--preamble", dest="preamble",
+    parser.add_argument("-p", "--preamble", dest="preamble",
                       help="latex preamble file", metavar="FILE")
-    parser.add_option("-k", "--packages", dest="packages",
-                     help="comma separated list of additional latex packages to be loaded", metavar="LIST")
-    parser.add_option("-f", "--fontsize", dest="fontsize", type="int",
+    parser.add_argument("-k", "--packages", dest="packages",
+                        help="comma separated list of additional latex packages to be loaded",
+                        metavar="LIST")
+    parser.add_argument("-f", "--fontsize", dest="fontsize", type=int,
                       help="latex base font size")
-    parser.add_option("-s", "--scale", dest="scale", type="float",
+    parser.add_argument("-s", "--scale", dest="scale", type=float,
                       help="apply additional scaling")
-    parser.add_option("-d", "--depth", dest="depth", type="int",
+    parser.add_argument("-d", "--depth", dest="depth", type=int,
                       help="maximum search depth for grouped text elements")
-    parser.add_option("-n", "--newline", dest="newline",
-                      action="store_true",
-                      help="insert \\\\ at every line break")
-    parser.add_option("-m", "--math", dest="math",
-                      action="store_true",
-                      help="encapsulate all text in math mode")
-    parser.add_option("-c", "--clean",
+    parser.add_argument("-c", "--clean",
                       action="store_true", dest="clean",
                       help="remove all renderings")
 
@@ -636,16 +631,15 @@ if STANDALONE is False:
     class RenderLatexEffect(inkex.Effect):
         def __init__(self):
             inkex.Effect.__init__(self)
-            add_options(self.OptionParser)
-            self.OptionParser.set_conflict_handler("resolve")
-            self.OptionParser.add_option("-l", "--log", type='inkbool',
-                                         action="store", dest="debug", default=False,
+            add_arguments(self.arg_parser)
+            self.arg_parser.add_argument("-l", "--log", type=inkex.utils.Boolean,
+                                         dest="debug", default=False,
                                          help="show log messages in inkscape")
-            self.OptionParser.add_option("-n", "--newline", dest="newline",
-                                         action="store", type='inkbool',
+            self.arg_parser.add_argument("-n", "--newline", dest="newline",
+                                         type=inkex.utils.Boolean,
                                          help="insert \newline at every line break")
-            self.OptionParser.add_option("-m", "--math", type='inkbool',
-                                         action="store", dest="math",
+            self.arg_parser.add_argument("-m", "--math", type=inkex.utils.Boolean,
+                                         dest="math",
                                          help="encapsulate all text in math mode")
 
         def effect(self):
@@ -657,39 +651,48 @@ else:
     # Create a standalone commandline application
     def main_standalone():
         # parse commandline arguments
-        from optparse import OptionParser
-        parser = OptionParser(usage="usage: %prog [options] SVGfile(s)")
-        add_options(parser)
-        parser.add_option("-v", "--verbose", default=False,
+        import argparse
+        parser = argparse.ArgumentParser(conflict_handler='resolve')
+        add_arguments(parser)
+        parser.add_argument("-n", "--newline", dest="newline",
+                            action="store_true",
+                            help="insert \\\\ at every line break")
+        parser.add_argument("-m", "--math", dest="math",
+                            action="store_true",
+                            help="encapsulate all text in math mode")
+        parser.add_argument("-v", "--verbose", default=False,
                           action="store_true", dest="verbose")
-        (options, args) = parser.parse_args()
+        parser.add_argument("svg", type=str, nargs='+',
+                            metavar="FILE",
+                            help="SVGfile(s)")
+        args = parser.parse_args()
 
-        if options.verbose is True:
+        if args.verbose is True:
             set_log_level(log_level_debug)
 
         # expand wildcards
-        args = [glob.glob(arg) if '*' in arg else arg for arg in args]
+        files = [glob.glob(arg) if '*' in arg else arg for arg in args.svg]
 
-        if len(args) < 1:
+        if len(files) < 1:
             log_error('No input file specified! Call with -h argument for usage instructions.')
             sys.exit(1)
-        elif len(args) > 2 and options.outfile and not os.path.isdir(options.outfile):
+        elif len(files) > 2 and args.outfile and not os.path.isdir(args.outfile):
             log_error('If more than one input file is specified -o/--outfile has to point to a directory.')
             sys.exit(1)
 
         # main loop, run the SVG processor for each input file
-        for infile in args:
-            if options.outfile:
-                if os.path.isdir(options.outfile):
-                    outfile = os.path.join(options.outfile, os.path.basename(infile))
+        for infile in files:
+            if args.outfile:
+                if os.path.isdir(args.outfile):
+                    outfile = os.path.join(args.outfile, os.path.basename(infile))
                 else:
-                    outfile = options.outfile
+                    outfile = args.outfile
             else:
                 outfile = infile
 
             log_info("Rendering " + infile + " -> " + outfile)
 
-            svgprocessor = SvgProcessor(infile, options)
+            svgprocessor = SvgProcessor(infile, args)
 
             try:
                 result = svgprocessor.run()
