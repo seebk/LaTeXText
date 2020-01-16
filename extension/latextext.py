@@ -13,7 +13,7 @@ import re
 from lxml import etree
 
 
-MAC = "Mac OS"
+MAC = "Darwin"
 WINDOWS = "Windows"
 PLATFORM = platform.system()
 
@@ -587,8 +587,18 @@ r"""\documentclass[%dpt]{%s}
         # Convert PDF to SVG
         if PLATFORM == WINDOWS:
             PDF2SVG_PATH = os.path.join(os.path.realpath(EXT_PATH), 'pdf2svg')
+        if PLATFORM == MAC:
+            if os.path.exists('/opt/local/bin/pdf2svg'):
+                PDF2SVG_PATH = '/opt/local/bin'
+            elif os.path.exists('/usr/local/bin/pdf2svg'):
+                PDF2SVG_PATH = '/usr/local/bin'
+            elif shutil.which("pdf2svg"):
+                PDF2SVG_PATH = os.path.dirname(shutil.which("pdf2svg"))
+            else:
+                log_error('PDF2SVG_PATH not found.')
         else:
             PDF2SVG_PATH = ''
+
         self._exec_command([os.path.join(PDF2SVG_PATH, 'pdf2svg'), os.path.join(tmp_path, 'tmp.pdf'), os.path.join(tmp_path, 'tmp.svg'), '1'])
 
         tree = etree.parse(os.path.join(tmp_path, 'tmp.svg'))
