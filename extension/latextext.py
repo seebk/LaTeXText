@@ -70,7 +70,7 @@ def log_message(msg_level, *msg):
         print(*msg)
     else:
         for m in msg:
-            inkex.debug(m)
+            inkex.utils.debug(m)
 
 
 def set_log_level(l):
@@ -711,6 +711,6 @@ if __name__ == "__main__":
     if STANDALONE is False:
         # run the extension
         effect = RenderLatexEffect()
-        effect.affect()
+        effect.run()
     else:
         main_standalone()
