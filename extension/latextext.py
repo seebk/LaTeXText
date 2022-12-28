@@ -36,9 +36,9 @@ NSS = {
     u'rendltx': RENDLTX_NS,
 }
 
-# uncocmment the following to register namespaces globally if newer LXML versions
+# uncomment the following to register namespaces globally if newer LXML versions
 # are shipped with Inkscape on Windows, then remove 'nsmap=NSS' syntax
-# etree.register_namespace("rendltx", RENDLTX_NS)
+etree.register_namespace("rendltx", RENDLTX_NS)
 
 ######################
 # logging functions
@@ -70,7 +70,7 @@ def log_message(msg_level, *msg):
         print(*msg)
     else:
         for m in msg:
-            inkex.debug(m)
+            inkex.utils.debug(m)
 
 
 def set_log_level(l):
@@ -621,7 +621,7 @@ def add_options(parser):
     parser.add_argument("-d", "--depth", dest="depth", type=int,
                       help="maximum search depth for grouped text elements")
     parser.add_argument("-n", "--newline", dest="newline",
-                      action="store_true",
+                      action="store_false",
                       help="insert \\\\ at every line break")
     parser.add_argument("-m", "--math", dest="math",
                       action="store_true",
@@ -629,30 +629,25 @@ def add_options(parser):
     parser.add_argument("-c", "--clean",
                       action="store_true", dest="clean",
                       help="remove all renderings")
+    parser.add_argument("-l", "--log", type=inkex.Boolean,
+                        action="store", dest="debug", default=False,
+                        help="show log messages in inkscape")
 
 
-# Create an Inkscape extension
-class RenderLatexEffect(inkex.Effect):
-    def __init__(self):
-        inkex.Effect.__init__(self)
-        add_options(self.arg_parser)
-
+class RenderLatexEffect(inkex.TextExtension):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.arg_parser.conflict_handler = "resolve"
-        self.arg_parser.add_argument("-l", "--log", type=inkex.Boolean,
-                                     action="store", dest="debug", default=False,
-                                     help="show log messages in inkscape")
-        self.arg_parser.add_argument("-n", "--newline", dest="newline",
-                                     action="store", type=inkex.Boolean,
-                                     help="insert \newline at every line break")
-        self.arg_parser.add_argument("-m", "--math", type=inkex.Boolean,
-                                     action="store", dest="math",
-                                     help="encapsulate all text in math mode")
+        add_options(self.arg_parser)
 
     def effect(self):
         if self.options.debug is True:
             set_log_level(log_level_debug)
         svgprocessor = SvgProcessor(self.document, self.options)
         svgprocessor.run()
+
+    def process_element(self, text_node):
+        log_debug("test")
 
 
 # Create a standalone commandline application
@@ -709,6 +704,6 @@ if __name__ == "__main__":
     if not STANDALONE:
         # run the extension
         effect = RenderLatexEffect()
-        effect.affect()
+        effect.run()
     else:
         main_standalone()

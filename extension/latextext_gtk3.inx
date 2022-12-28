@@ -4,7 +4,7 @@
 	<id>org.inkscape.render.latextext_gtk3</id>
 	<dependency type="executable" location="extensions">latextext.py</dependency>
 	<dependency type="executable" location="extensions">latextext_gtk3.py</dependency>
-    <dependency type="executable" location="extensions">inkex.py</dependency>
+    <dependency type="executable" location="extensions">inkex</dependency>
 	<effect>
 		<object-type>all</object-type>
 		<effects-menu>
