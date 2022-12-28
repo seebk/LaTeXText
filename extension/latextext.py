@@ -575,13 +575,13 @@ r"""\documentclass[%dpt]{%s}
             cmd = [os.path.join(LATEX_PATH, 'pdflatex'), texfile_path] + latexOpts
             cmdlog = self._exec_command(cmd)
         except RuntimeError as error:
-            # TODO: cleanup excpetion handling and excception chains
+            # TODO: cleanup exception handling and exception chains
             log_error(cmdlog)
             raise RuntimeError()
 
         if not os.path.exists(os.path.join(tmp_path, 'tmp.pdf')):
             log_error("pdflatex didn't produce output ", os.path.join(tmp_path, 'tmp.pdf'))
-            # TODO: cleanup excpetion handling and excception chains
+            # TODO: cleanup exception handling and exception chains
             raise RuntimeError()
 
         # Convert PDF to SVG
@@ -621,7 +621,7 @@ def add_options(parser):
     parser.add_argument("-d", "--depth", dest="depth", type=int,
                       help="maximum search depth for grouped text elements")
     parser.add_argument("-n", "--newline", dest="newline",
-                      action="store_false",
+                      action="store_false", default=False,
                       help="insert \\\\ at every line break")
     parser.add_argument("-m", "--math", dest="math",
                       action="store_true",
