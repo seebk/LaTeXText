@@ -174,4 +174,4 @@ class RenderLatexEffectGTK3(RenderLatexEffect):
 
 if __name__ == "__main__":
     effect = RenderLatexEffectGTK3()
-    effect.affect()
+    effect.run()
