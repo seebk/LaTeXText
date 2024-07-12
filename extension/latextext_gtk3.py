@@ -53,7 +53,7 @@ class Gtk3ParamGui(Gtk.Window):
 
         row_count = 0
         box0 = Gtk.Box(spacing=6)
-        grid.attach(Gtk.Label("Preamble File"), 0, row_count, 1, 1)
+        grid.attach(Gtk.Label(label="Preamble File"), 0, row_count, 1, 1)
         self.entryPreamble = Gtk.Entry()
         self.entryPreamble.set_text(options.preamble)
         self.entryPreamble.set_hexpand(True)
@@ -65,14 +65,14 @@ class Gtk3ParamGui(Gtk.Window):
         grid.attach(box0, 1, row_count, 1, 1)
 
         row_count += 1
-        grid.attach(Gtk.Label("Additional Packages"), 0, row_count, 1, 1)
+        grid.attach(Gtk.Label(label="Additional Packages"), 0, row_count, 1, 1)
         self.entryPackages = Gtk.Entry()
         self.entryPackages.set_text(options.packages)
         self.entryPackages.set_hexpand(True)
         grid.attach(self.entryPackages, 1, row_count, 1, 1)
 
         row_count += 1
-        grid.attach(Gtk.Label("Document base font size"), 0, row_count, 1, 1)
+        grid.attach(Gtk.Label(label="Document base font size"), 0, row_count, 1, 1)
         self.entryFontsize = Gtk.SpinButton.new_with_range(1, 32, 1)
         self.entryFontsize.set_value(options.fontsize)
         self.entryFontsize.set_hexpand(False)
@@ -82,29 +82,29 @@ class Gtk3ParamGui(Gtk.Window):
         self.entryScale = Gtk.SpinButton.new_with_range(0.01, 20.0, 0.05)
         self.entryScale.set_digits(2)
         self.entryScale.set_value(options.scale)
-        grid.attach(Gtk.Label("Scale factor"), 0, row_count, 1, 1)
+        grid.attach(Gtk.Label(label="Scale factor"), 0, row_count, 1, 1)
         grid.attach(self.entryScale, 1, row_count, 1, 1)
 
         row_count += 1
         self.entryDepth = Gtk.SpinButton.new_with_range(0, 100, 1)
         self.entryDepth.set_value(options.depth)
-        grid.attach(Gtk.Label("SVG/XML tree max. depth"), 0, row_count, 1, 1)
+        grid.attach(Gtk.Label(label="SVG/XML tree max. depth"), 0, row_count, 1, 1)
         grid.attach(self.entryDepth, 1, row_count, 1, 1)
 
         row_count += 1
-        grid.attach(Gtk.Label("Add \\\\ at every line break"), 0, row_count, 1, 1)
+        grid.attach(Gtk.Label(label="Add \\\\ at every line break"), 0, row_count, 1, 1)
         self.btnNewline = Gtk.CheckButton()
         self.btnNewline.set_active(options.newline)
         grid.attach(self.btnNewline, 1, row_count, 1, 1)
 
         row_count += 1
-        grid.attach(Gtk.Label("Encapsulate all text with ($..$)"), 0, row_count, 1, 1)
+        grid.attach(Gtk.Label(label="Encapsulate all text with ($..$)"), 0, row_count, 1, 1)
         self.btnMath = Gtk.CheckButton()
         self.btnMath.set_active(options.math)
         grid.attach(self.btnMath, 1, row_count, 1, 1)
 
         row_count += 1
-        grid.attach(Gtk.Label("Show log messages"), 0, row_count, 1, 1)
+        grid.attach(Gtk.Label(label="Show log messages"), 0, row_count, 1, 1)
         self.btnShowLog = Gtk.CheckButton()
         grid.attach(self.btnShowLog, 1, row_count, 1, 1)
 
@@ -128,10 +128,11 @@ class Gtk3ParamGui(Gtk.Window):
         self.set_default(btnApply)
 
     def on_select_preamble(self, widget):
-        dialog = Gtk.FileChooserDialog("Please choose a Latex preamble file", self,
+        dialog = Gtk.FileChooserDialog(self,
                                        Gtk.FileChooserAction.OPEN,
                                        (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                        Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+                                        Gtk.STOCK_OPEN, Gtk.ResponseType.OK),
+                                       label="Please choose a Latex preamble file")
         dialog.set_keep_above(True)
         dialog.set_modal(True)
         response = dialog.run()
@@ -174,4 +175,4 @@ class RenderLatexEffectGTK3(RenderLatexEffect):
 
 if __name__ == "__main__":
     effect = RenderLatexEffectGTK3()
-    effect.affect()
+    effect.run()
